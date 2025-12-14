@@ -1,0 +1,6 @@
+@Tevolai.APIs_HostAddress = http://localhost:5174
+
+GET {{Tevolai.APIs_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
