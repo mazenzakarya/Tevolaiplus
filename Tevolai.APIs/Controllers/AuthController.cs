@@ -21,7 +21,7 @@ namespace Tevolai.APIs.Controllers
         {
             try
             {
-                var result = await _authManager.register(registerDto);
+                var result = await _authManager.Register(registerDto);
                 return Ok(result);
             }
             catch (Exception ex)
@@ -35,7 +35,7 @@ namespace Tevolai.APIs.Controllers
         {
             try
             {
-                var result = await _authManager.login(loginDto);
+                var result = await _authManager.Login(loginDto);
                 return Ok(new { token = result });
             }
             catch (Exception ex)

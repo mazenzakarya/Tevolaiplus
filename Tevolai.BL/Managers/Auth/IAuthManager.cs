@@ -4,7 +4,8 @@ namespace Tevolai.BL.Managers.Auth
 {
     public interface IAuthManager
     {
-        Task<string> login(LoginDto loginDto);
-        Task<RegisterDto> register(RegisterDto registerDto);
+        Task<AuthResponseDto> Login(LoginDto loginDto);
+
+        Task<RegisterDto> Register(RegisterDto registerDto);
     }
 }

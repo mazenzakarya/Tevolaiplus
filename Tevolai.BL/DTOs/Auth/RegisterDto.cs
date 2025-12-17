@@ -15,5 +15,11 @@ namespace Tevolai.BL.DTOs.Auth
         [Required(ErrorMessage = "UserName is required")]
         [StringLength(50, MinimumLength = 3, ErrorMessage = "UserName must be between 3 and 20 characters long")]
         public string UserName { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "First Name is required")]
+        public string FirstName { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Last Name is required")]
+        public string LastName { get; set; } = string.Empty;
     }
 }
