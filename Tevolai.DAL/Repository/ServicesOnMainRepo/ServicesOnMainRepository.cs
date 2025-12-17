@@ -41,6 +41,9 @@ namespace Tevolai.DAL.Repository.ServicesOnMainRepo
                 existingService.Description = service.Description;
                 existingService.ImageUrl = service.ImageUrl;
                 existingService.Price = service.Price;
+                existingService.Category = service.Category;
+                existingService.IsActive = service.IsActive;
+                existingService.Language = service.Language;
             }
             await db.SaveChangesAsync();
         }
@@ -67,6 +70,14 @@ namespace Tevolai.DAL.Repository.ServicesOnMainRepo
         {
             return await db.ServicesOnMains
                            .Where(s => s.Category == category && !s.IsDeleted)
+                           .ToListAsync();
+        }
+
+        // get all services on main by language
+        public async Task<List<ServicesOnMain>> GetServicesOnMainByLanguage(Language language)
+        {
+            return await db.ServicesOnMains
+                           .Where(s => s.Language == language && !s.IsDeleted)
                            .ToListAsync();
         }
     }

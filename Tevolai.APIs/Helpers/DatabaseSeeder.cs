@@ -4,7 +4,7 @@ using Tevolai.DAL.Context;
 using Tevolai.DAL.Entities;
 using Tevolai.BL.Managers.EmailCredentials;
 
-namespace Tevolai.DAL.Helpers
+namespace Tevolai.APIs.Helpers
 {
     public class DatabaseSeeder
     {
@@ -24,29 +24,36 @@ namespace Tevolai.DAL.Helpers
 
         public async Task SeedAsync()
         {
-            // Ensure database is created
+            // Ensure database is created (drops and recreates if needed)
+            await _context.Database.EnsureDeletedAsync();
             await _context.Database.EnsureCreatedAsync();
 
             // Seed Users
             await SeedUsersAsync();
 
             // Seed Customers
-            await SeedCustomersAsync();
+            var customers = await SeedCustomersAsync();
+            var customer1 = customers[0];
+            var customer2 = customers[1];
+            var customer3 = customers[2];
 
             // Seed Services on Main
             await SeedServicesOnMainAsync();
 
             // Seed Services on Dashboard
-            await SeedServicesOnDashboardAsync();
+            var services = await SeedServicesOnDashboardAsync(customer1, customer2, customer3);
+            var service1 = services[0];
+            var service2 = services[1];
+            var service3 = services[2];
 
             // Seed Email Credentials
-            await SeedEmailCredentialsAsync();
+            await SeedEmailCredentialsAsync(customer1, customer2, customer3);
 
             // Seed Expenses
             await SeedExpensesAsync();
 
             // Seed Revenues
-            await SeedRevenuesAsync();
+            await SeedRevenuesAsync(customer1, customer2, service1, service2);
 
             // Seed Contact Messages
             await SeedContactMessagesAsync();
@@ -69,16 +76,15 @@ namespace Tevolai.DAL.Helpers
             await _userManager.CreateAsync(adminUser, "Admin@123");
         }
 
-        private async Task SeedCustomersAsync()
+        private async Task<List<Customer>> SeedCustomersAsync()
         {
             if (await _context.Customers.AnyAsync())
-                return;
+                return await _context.Customers.Where(c => !c.IsDeleted).ToListAsync();
 
             var customers = new List<Customer>
             {
                 new Customer
                 {
-                    Id = 1,
                     FullName = "John Doe",
                     Email = "john.doe@example.com",
                     Phone = "+1-555-0101",
@@ -90,7 +96,6 @@ namespace Tevolai.DAL.Helpers
                 },
                 new Customer
                 {
-                    Id = 2,
                     FullName = "Jane Smith",
                     Email = "jane.smith@example.com",
                     Phone = "+1-555-0102",
@@ -102,7 +107,6 @@ namespace Tevolai.DAL.Helpers
                 },
                 new Customer
                 {
-                    Id = 3,
                     FullName = "Ahmed Hassan",
                     Email = "ahmed.hassan@example.com",
                     Phone = "+20-100-123-4567",
@@ -116,6 +120,8 @@ namespace Tevolai.DAL.Helpers
 
             await _context.Customers.AddRangeAsync(customers);
             await _context.SaveChangesAsync();
+            
+            return customers;
         }
 
         private async Task SeedServicesOnMainAsync()
@@ -127,7 +133,6 @@ namespace Tevolai.DAL.Helpers
             {
                 new ServicesOnMain
                 {
-                    Id = 1,
                     Title = "Website Development",
                     Description = "Professional website development using modern technologies",
                     Price = 5000.00m,
@@ -139,7 +144,6 @@ namespace Tevolai.DAL.Helpers
                 },
                 new ServicesOnMain
                 {
-                    Id = 2,
                     Title = "E-Commerce Solutions",
                     Description = "Complete e-commerce platform development",
                     Price = 8000.00m,
@@ -151,7 +155,6 @@ namespace Tevolai.DAL.Helpers
                 },
                 new ServicesOnMain
                 {
-                    Id = 3,
                     Title = "Mobile App Development",
                     Description = "Native and cross-platform mobile applications",
                     Price = 10000.00m,
@@ -163,7 +166,6 @@ namespace Tevolai.DAL.Helpers
                 },
                 new ServicesOnMain
                 {
-                    Id = 4,
                     Title = "SEO Optimization",
                     Description = "Search engine optimization services",
                     Price = 2000.00m,
@@ -179,17 +181,16 @@ namespace Tevolai.DAL.Helpers
             await _context.SaveChangesAsync();
         }
 
-        private async Task SeedServicesOnDashboardAsync()
+        private async Task<List<ServicesOnDashBoard>> SeedServicesOnDashboardAsync(Customer customer1, Customer customer2, Customer customer3)
         {
             if (await _context.ServicesOnDashBoards.AnyAsync())
-                return;
+                return await _context.ServicesOnDashBoards.Where(s => !s.IsDeleted).ToListAsync();
 
             var services = new List<ServicesOnDashBoard>
             {
                 new ServicesOnDashBoard
                 {
-                    Id = 1,
-                    CustomerId = 1,
+                    CustomerId = customer1.Id,
                     ServiceName = "John's WordPress Site",
                     Domain = "johndoe.com",
                     UserName = "johndoe_admin",
@@ -202,8 +203,7 @@ namespace Tevolai.DAL.Helpers
                 },
                 new ServicesOnDashBoard
                 {
-                    Id = 2,
-                    CustomerId = 2,
+                    CustomerId = customer2.Id,
                     ServiceName = "Jane's E-Commerce Platform",
                     Domain = "janeshop.com",
                     UserName = "jane_admin",
@@ -216,8 +216,7 @@ namespace Tevolai.DAL.Helpers
                 },
                 new ServicesOnDashBoard
                 {
-                    Id = 3,
-                    CustomerId = 3,
+                    CustomerId = customer3.Id,
                     ServiceName = "Ahmed's Business Site",
                     Domain = "ahmedbusiness.com",
                     UserName = "ahmed_user",
@@ -232,9 +231,11 @@ namespace Tevolai.DAL.Helpers
 
             await _context.ServicesOnDashBoards.AddRangeAsync(services);
             await _context.SaveChangesAsync();
+            
+            return services;
         }
 
-        private async Task SeedEmailCredentialsAsync()
+        private async Task SeedEmailCredentialsAsync(Customer customer1, Customer customer2, Customer customer3)
         {
             if (await _context.EmailCredentials.AnyAsync())
                 return;
@@ -243,8 +244,7 @@ namespace Tevolai.DAL.Helpers
             {
                 new EmailCredential
                 {
-                    Id = 1,
-                    CustomerId = 1,
+                    CustomerId = customer1.Id,
                     EmailAddress = "admin@johndoe.com",
                     EncryptedPassword = _encryptionService.Encrypt("SecurePass123!"),
                     UserName = "johndoe_admin",
@@ -255,8 +255,7 @@ namespace Tevolai.DAL.Helpers
                 },
                 new EmailCredential
                 {
-                    Id = 2,
-                    CustomerId = 2,
+                    CustomerId = customer2.Id,
                     EmailAddress = "support@janeshop.com",
                     EncryptedPassword = _encryptionService.Encrypt("ShopPass456!"),
                     UserName = "jane_support",
@@ -267,8 +266,7 @@ namespace Tevolai.DAL.Helpers
                 },
                 new EmailCredential
                 {
-                    Id = 3,
-                    CustomerId = 3,
+                    CustomerId = customer3.Id,
                     EmailAddress = "info@ahmedbusiness.com",
                     EncryptedPassword = _encryptionService.Encrypt("Business789!"),
                     UserName = "ahmed_info",
@@ -292,7 +290,6 @@ namespace Tevolai.DAL.Helpers
             {
                 new Expense
                 {
-                    Id = 1,
                     Title = "Server Hosting",
                     Amount = 150.00m,
                     Category = "Infrastructure",
@@ -302,7 +299,6 @@ namespace Tevolai.DAL.Helpers
                 },
                 new Expense
                 {
-                    Id = 2,
                     Title = "Domain Renewal",
                     Amount = 15.00m,
                     Category = "Domain",
@@ -312,7 +308,6 @@ namespace Tevolai.DAL.Helpers
                 },
                 new Expense
                 {
-                    Id = 3,
                     Title = "SSL Certificate",
                     Amount = 50.00m,
                     Category = "Security",
@@ -326,7 +321,7 @@ namespace Tevolai.DAL.Helpers
             await _context.SaveChangesAsync();
         }
 
-        private async Task SeedRevenuesAsync()
+        private async Task SeedRevenuesAsync(Customer customer1, Customer customer2, ServicesOnDashBoard service1, ServicesOnDashBoard service2)
         {
             if (await _context.Revenues.AnyAsync())
                 return;
@@ -335,9 +330,8 @@ namespace Tevolai.DAL.Helpers
             {
                 new Revenue
                 {
-                    Id = 1,
-                    CustomerId = 1,
-                    ServiceId = 1, // Points to ServicesOnDashBoard
+                    CustomerId = customer1.Id,
+                    ServiceId = service1.Id, // Points to ServicesOnDashBoard
                     Amount = 5000.00m,
                     PaymentDate = DateTime.UtcNow.AddDays(-20),
                     PaymentMethod = "Bank Transfer",
@@ -346,9 +340,8 @@ namespace Tevolai.DAL.Helpers
                 },
                 new Revenue
                 {
-                    Id = 2,
-                    CustomerId = 2,
-                    ServiceId = 2, // Points to ServicesOnDashBoard
+                    CustomerId = customer2.Id,
+                    ServiceId = service2.Id, // Points to ServicesOnDashBoard
                     Amount = 8000.00m,
                     PaymentDate = DateTime.UtcNow.AddDays(-15),
                     PaymentMethod = "Credit Card",
@@ -357,9 +350,8 @@ namespace Tevolai.DAL.Helpers
                 },
                 new Revenue
                 {
-                    Id = 3,
-                    CustomerId = 1,
-                    ServiceId = 1, // Points to ServicesOnDashBoard
+                    CustomerId = customer1.Id,
+                    ServiceId = service1.Id, // Points to ServicesOnDashBoard
                     Amount = 2000.00m,
                     PaymentDate = DateTime.UtcNow.AddDays(-8),
                     PaymentMethod = "PayPal",
@@ -381,7 +373,6 @@ namespace Tevolai.DAL.Helpers
             {
                 new ContactMessage
                 {
-                    Id = 1,
                     FullName = "Sarah Johnson",
                     Email = "sarah.johnson@example.com",
                     Subject = "Website Development Inquiry",
@@ -391,7 +382,6 @@ namespace Tevolai.DAL.Helpers
                 },
                 new ContactMessage
                 {
-                    Id = 2,
                     FullName = "Michael Brown",
                     Email = "michael.brown@example.com",
                     Subject = "Mobile App Development",
@@ -401,7 +391,6 @@ namespace Tevolai.DAL.Helpers
                 },
                 new ContactMessage
                 {
-                    Id = 3,
                     FullName = "Emily Davis",
                     Email = "emily.davis@example.com",
                     Subject = "SEO Services",

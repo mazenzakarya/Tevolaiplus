@@ -14,19 +14,34 @@ namespace Tevolai.DAL.Context
         {
             base.OnModelCreating(modelBuilder);
 
-            // Configure BlogPost relationships
-            modelBuilder.Entity<Customer>().HasData(
-                new Customer
-                {
-                    Id = 1,
-                    FullName = "John Doe",
-                    Email = "mazen.mail.com",
-                    Phone = "123-456-7890",
-                    CompanyName = "Tech Solutions",
-                    Country = "USA",
-                    Notes = "Important client",
-                    IsDeleted = false
-                });
+            // Configure decimal precision to avoid truncation warnings
+            modelBuilder.Entity<Expense>()
+                .Property(e => e.Amount)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<Revenue>()
+                .Property(r => r.Amount)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<ServicesOnMain>()
+                .Property(s => s.Price)
+                .HasPrecision(18, 2);
+
+            // Configure Revenue relationships to avoid cascade path conflicts
+            // Revenue -> Customer: NO ACTION (since we use soft deletes)
+            // Revenue -> ServicesOnDashBoard: NO ACTION (to avoid cascade path through Customer)
+            modelBuilder.Entity<Revenue>()
+                .HasOne(r => r.Customer)
+                .WithMany(c => c.Revenues)
+                .HasForeignKey(r => r.CustomerId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<Revenue>()
+                .HasOne(r => r.Service)
+                .WithMany()
+                .HasForeignKey(r => r.ServiceId)
+                .OnDelete(DeleteBehavior.NoAction);
+
             //global query filter to exclude soft-deleted entities
             modelBuilder.Entity<EmailCredential>().HasQueryFilter(e => !e.IsDeleted);
             modelBuilder.Entity<Customer>().HasQueryFilter(c => !c.IsDeleted);

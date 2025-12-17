@@ -24,6 +24,7 @@ namespace Tevolai.BL.Managers.ServicesOnMains
                 ImageUrl = service.ImageUrl,
                 Category = service.Category,
                 IsActive = service.IsActive,
+                Language = service.Language,
                 CreatedAt = DateTime.UtcNow,
             };
             await _repo.AddServiceOnMainAsync(entity);
@@ -96,6 +97,24 @@ namespace Tevolai.BL.Managers.ServicesOnMains
         public async Task<List<ServicesOnMainDto>> GetServicesOnMainByCategoryAsync(string category)
         {
             var entities = await _repo.GetServicesOnMainByCategoryAsync(category);
+            return entities.Select(entity => new ServicesOnMainDto
+            {
+                Id = entity.Id,
+                Title = entity.Title,
+                Description = entity.Description,
+                Price = entity.Price,
+                ImageUrl = entity.ImageUrl,
+                Category = entity.Category,
+                IsActive = entity.IsActive,
+                CreatedAt = entity.CreatedAt,
+                IsDeleted = entity.IsDeleted
+            }).ToList();
+        }
+
+        // filter services on main by language
+        public async Task<List<ServicesOnMainDto>> GetServicesOnMainByLanguage(Language language)
+        {
+            var entities = await _repo.GetServicesOnMainByLanguage(language);
             return entities.Select(entity => new ServicesOnMainDto
             {
                 Id = entity.Id,

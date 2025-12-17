@@ -8,13 +8,13 @@ using Tevolai.BL.Managers.Auth;
 using Tevolai.DAL;
 using Tevolai.DAL.Context;
 using Tevolai.DAL.Entities;
-using Tevolai.DAL.Helpers;
+using Tevolai.APIs.Helpers;
 
 namespace Tevolai.APIs
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 

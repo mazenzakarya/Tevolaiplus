@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Tevolai.BL.DTOs.ServicesOnMainDto;
 using Tevolai.BL.Managers.ServicesOnMains;
+using Tevolai.DAL.Entities;
 
 namespace Tevolai.APIs.Controllers
 {
@@ -82,6 +83,21 @@ namespace Tevolai.APIs.Controllers
             {
                 await _service.DeleteServiceOnMainAsync(id);
                 return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
+        // get services on main by language
+        [HttpGet("GetServicesOnMainByLanguage/{language}")]
+        public async Task<IActionResult> GetServicesOnMainByLanguage(Language language)
+        {
+            try
+            {
+                var services = await _service.GetServicesOnMainByLanguage(language);
+                return Ok(services);
             }
             catch (Exception ex)
             {
