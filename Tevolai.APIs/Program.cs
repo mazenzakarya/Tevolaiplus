@@ -8,6 +8,7 @@ using Tevolai.BL.Managers.Auth;
 using Tevolai.DAL;
 using Tevolai.DAL.Context;
 using Tevolai.DAL.Entities;
+using Tevolai.DAL.Helpers;
 
 namespace Tevolai.APIs
 {
@@ -54,7 +55,19 @@ namespace Tevolai.APIs
              .AddEntityFrameworkStores<TevolaiDbContext>()
              .AddDefaultTokenProviders();
             builder.Services.AddScoped<AuthManager>();
+            builder.Services.AddScoped<DatabaseSeeder>();
+            
             var app = builder.Build();
+
+            // Seed database in development
+            if (app.Environment.IsDevelopment())
+            {
+                using (var scope = app.Services.CreateScope())
+                {
+                    var seeder = scope.ServiceProvider.GetRequiredService<DatabaseSeeder>();
+                    await seeder.SeedAsync();
+                }
+            }
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())

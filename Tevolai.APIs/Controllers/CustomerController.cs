@@ -20,50 +20,92 @@ namespace Tevolai.APIs.Controllers
         [HttpPost("AddCustomer")]
         public async Task<IActionResult> AddCustomer([FromBody] CustomerDto dto)
         {
-            await _service.AddCustomerAsync(dto);
-            return Ok();
+            try
+            {
+                await _service.AddCustomerAsync(dto);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
         }
 
         // Get Customer By Id
         [HttpGet("GetCustomerById/{id}")]
         public async Task<IActionResult> GetCustomerById(int id)
         {
-            var customer = await _service.GetCustomerByIdAsync(id);
-            if (customer == null)
-                return NotFound();
-            return Ok(customer);
+            try
+            {
+                var customer = await _service.GetCustomerByIdAsync(id);
+                if (customer == null)
+                    return NotFound(new { error = "Customer not found" });
+                return Ok(customer);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
         }
 
         // Update Customer
         [HttpPut("UpdateCustomer")]
         public async Task<IActionResult> UpdateCustomer([FromBody] CustomerDto dto)
         {
-            await _service.UpdateCustomerAsync(dto);
-            return Ok();
+            try
+            {
+                await _service.UpdateCustomerAsync(dto);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
         }
 
         // Delete Customer
         [HttpDelete("DeleteCustomer/{id}")]
         public async Task<IActionResult> DeleteCustomer(int id)
         {
-            await _service.DeleteCustomerAsync(id);
-            return Ok();
+            try
+            {
+                await _service.DeleteCustomerAsync(id);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
         }
 
         // Get All Customers
         [HttpGet("GetAllCustomers")]
         public async Task<IActionResult> GetAllCustomers()
         {
-            var customers = await _service.GetAllCustomersAsync();
-            return Ok(customers);
+            try
+            {
+                var customers = await _service.GetAllCustomersAsync();
+                return Ok(customers);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
         }
 
         // Search Customers
         [HttpGet("SearchCustomers")]
         public async Task<IActionResult> SearchCustomers([FromQuery] string query)
         {
-            var customers = await _service.SearchCustomersAsync(query);
-            return Ok(customers);
+            try
+            {
+                var customers = await _service.SearchCustomersAsync(query);
+                return Ok(customers);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
         }
     }
 }

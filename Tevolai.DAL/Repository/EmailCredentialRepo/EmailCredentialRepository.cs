@@ -22,7 +22,8 @@ namespace Tevolai.DAL.Repository.EmailCredentialRepo
 
         public async Task<EmailCredential?> GetByIdAsync(int id)
         {
-            return await db.EmailCredentials.FirstOrDefaultAsync(e => e.Id == id && !e.IsDeleted);
+            return await db.EmailCredentials
+                .FirstOrDefaultAsync(e => e.Id == id && !e.IsDeleted);
         }
 
         public async Task UpdateAsync(EmailCredential credential)
@@ -31,11 +32,39 @@ namespace Tevolai.DAL.Repository.EmailCredentialRepo
             await db.SaveChangesAsync();
         }
 
+        public async Task UpdateLastUsedAndAuditAsync(EmailCredential credential)
+        {
+            // Only update LastUsedAt and AuditLog without touching the password
+            var existing = await db.EmailCredentials.FindAsync(credential.Id);
+            if (existing != null)
+            {
+                existing.LastUsedAt = credential.LastUsedAt;
+                existing.AuditLog = credential.AuditLog;
+                db.Entry(existing).Property(x => x.LastUsedAt).IsModified = true;
+                db.Entry(existing).Property(x => x.AuditLog).IsModified = true;
+                await db.SaveChangesAsync();
+            }
+        }
+
         public async Task SoftDeleteAsync(EmailCredential credential)
         {
-            credential.IsDeleted = true;
-            db.EmailCredentials.Update(credential);
-            await db.SaveChangesAsync();
+            var existing = await db.EmailCredentials.FindAsync(credential.Id);
+            if (existing != null)
+            {
+                existing.IsDeleted = true;
+                existing.AuditLog = credential.AuditLog;
+                await db.SaveChangesAsync();
+            }
+        }
+
+        public async Task<List<EmailCredential>> GetAllAsync(bool includeDeleted = false)
+        {
+            var query = db.EmailCredentials.AsNoTracking();
+            
+            if (!includeDeleted)
+                query = query.Where(e => !e.IsDeleted);
+            
+            return await query.ToListAsync();
         }
     }
 }

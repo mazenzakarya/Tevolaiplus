@@ -20,50 +20,92 @@ namespace Tevolai.APIs.Controllers
         [HttpPost]
         public async Task<IActionResult> AddExpense([FromBody] ExpenseDto dto)
         {
-            await _service.AddExpenseAsync(dto);
-            return Ok();
+            try
+            {
+                await _service.AddExpenseAsync(dto);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
         }
 
         // Get Expense By Id
         [HttpGet("{id}")]
         public async Task<IActionResult> GetExpenseById(int id)
         {
-            var expense = await _service.GetExpenseByIdAsync(id);
-            if (expense == null)
-                return NotFound();
-            return Ok(expense);
+            try
+            {
+                var expense = await _service.GetExpenseByIdAsync(id);
+                if (expense == null)
+                    return NotFound(new { error = "Expense not found" });
+                return Ok(expense);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
         }
 
         // Update Expense
         [HttpPut]
         public async Task<IActionResult> UpdateExpense([FromBody] ExpenseDto dto)
         {
-            await _service.UpdateExpenseAsync(dto);
-            return Ok();
+            try
+            {
+                await _service.UpdateExpenseAsync(dto);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
         }
 
         // Delete Expense
-        [HttpDelete]
+        [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteExpense(int id)
         {
-            await _service.SoftDeleteExpenseAsync(id);
-            return Ok();
+            try
+            {
+                await _service.SoftDeleteExpenseAsync(id);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
         }
 
         // Get All Expenses
         [HttpGet]
-        public async Task<IActionResult> GetAllExpenses(int pageNumper, int pageSize)
+        public async Task<IActionResult> GetAllExpenses([FromQuery] int pageNumper = 1, [FromQuery] int pageSize = 10)
         {
-            var expenses = await _service.GetAllExpensesAsync(pageNumper, pageSize);
-            return Ok(expenses);
+            try
+            {
+                var expenses = await _service.GetAllExpensesAsync(pageNumper, pageSize);
+                return Ok(expenses);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
         }
 
         // Get Total Expenses Count
         [HttpGet("count")]
         public async Task<IActionResult> GetTotalExpensesCount()
         {
-            var count = await _service.GetTotalExpensesAmountAsync();
-            return Ok(count);
+            try
+            {
+                var count = await _service.GetTotalExpensesAmountAsync();
+                return Ok(new { totalAmount = count });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
         }
     }
 }

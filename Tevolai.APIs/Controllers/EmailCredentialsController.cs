@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Tevolai.BL.Managers.EmailCredentials;
-using Tevolai.DAL.Entities;
 
 namespace Tevolai.APIs.Controllers
 {
@@ -17,18 +16,20 @@ namespace Tevolai.APIs.Controllers
 
         // ===================== Add Credential =====================
         public record AddEmailCredentialRequest(
-    string EmailAddress,
-    string Password,
-    string UserName,
-    string? HostingPlatform,
-    string? Notes
-);
+            string EmailAddress,
+            string Password,
+            string UserName,
+            int? CustomerId,
+            string? HostingPlatform,
+            string? Notes
+        );
 
-        [HttpPost("AddCredentialAsync")]
+        [HttpPost("AddCredential")]
         public async Task<IActionResult> AddCredentialAsync([FromBody] AddEmailCredentialRequest request)
         {
-            if (request == null)
-                return BadRequest("Invalid data");
+            if (request == null || string.IsNullOrWhiteSpace(request.EmailAddress) || 
+                string.IsNullOrWhiteSpace(request.Password) || string.IsNullOrWhiteSpace(request.UserName))
+                return BadRequest(new { error = "EmailAddress, Password, and UserName are required" });
 
             try
             {
@@ -36,10 +37,17 @@ namespace Tevolai.APIs.Controllers
                     request.EmailAddress,
                     request.Password,
                     request.UserName,
+                    request.CustomerId,
+                    request.HostingPlatform,
+                    request.Notes,
                     "API"
                 );
 
                 return Ok(new { message = "Credential added successfully" });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { error = ex.Message });
             }
             catch (Exception ex)
             {
@@ -47,48 +55,94 @@ namespace Tevolai.APIs.Controllers
             }
         }
 
-        // ===================== Get Credential =====================
+        // ===================== Get Credential (without password) =====================
         [HttpGet("{id}")]
         public async Task<IActionResult> GetCredentialAsync(int id)
         {
             try
             {
-                var credential = await _service.GetCredentialAsync(id, "API");
+                var credential = await _service.GetCredentialAsync(id, includeDecryptedPassword: false, by: "API");
                 if (credential == null)
-                    return NotFound("Credential not found");
+                    return NotFound(new { error = "Credential not found" });
 
-                // يمكنك هنا إرسال الباسورد مفكوك (اختياري)
                 return Ok(credential);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex.Message);
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
+        // ===================== Get Credential with Decrypted Password =====================
+        [HttpGet("{id}/with-password")]
+        public async Task<IActionResult> GetCredentialWithPasswordAsync(int id)
+        {
+            try
+            {
+                var credential = await _service.GetCredentialAsync(id, includeDecryptedPassword: true, by: "API");
+                if (credential == null)
+                    return NotFound(new { error = "Credential not found" });
+
+                return Ok(credential);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
+        // ===================== Get All Credentials =====================
+        [HttpGet]
+        public async Task<IActionResult> GetAllCredentialsAsync([FromQuery] bool includeDeleted = false)
+        {
+            try
+            {
+                var credentials = await _service.GetAllCredentialsAsync(includeDeleted);
+                return Ok(credentials);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
             }
         }
 
         // ===================== Update Credential =====================
-        [HttpPut("UpdateCredentialAsync")]
-        public async Task<IActionResult> UpdateCredentialAsync([FromBody] EmailCredential emailCredential)
+        public record UpdateEmailCredentialRequest(
+            int Id,
+            string? UserName,
+            string? Password,
+            int? CustomerId,
+            string? HostingPlatform,
+            string? Notes
+        );
+
+        [HttpPut("UpdateCredential")]
+        public async Task<IActionResult> UpdateCredentialAsync([FromBody] UpdateEmailCredentialRequest request)
         {
-            if (emailCredential == null || emailCredential.Id == 0)
-                return BadRequest("Invalid data");
+            if (request == null || request.Id == 0)
+                return BadRequest(new { error = "Invalid data. Id is required." });
 
             try
             {
-                var existingCredential = await _service.GetCredentialAsync(emailCredential.Id, "API");
-                if (existingCredential == null)
-                    return NotFound("Credential not found");
+                await _service.UpdateCredentialAsync(
+                    request.Id,
+                    request.UserName,
+                    request.Password,
+                    request.CustomerId,
+                    request.HostingPlatform,
+                    request.Notes,
+                    "API"
+                );
 
-                existingCredential.UserName = emailCredential.UserName;
-
-                // إذا تم إرسال باسورد جديد، يحدث التشفير
-                await _service.UpdateCredentialAsync(existingCredential, emailCredential.EncryptedPassword, "API");
-
-                return Ok("Credential updated successfully");
+                return Ok(new { message = "Credential updated successfully" });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex.Message);
+                return StatusCode(500, new { error = ex.Message });
             }
         }
 
@@ -99,11 +153,15 @@ namespace Tevolai.APIs.Controllers
             try
             {
                 await _service.SoftDeleteCredentialAsync(id, "API");
-                return Ok("Credential soft deleted successfully");
+                return Ok(new { message = "Credential soft deleted successfully" });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex.Message);
+                return StatusCode(500, new { error = ex.Message });
             }
         }
     }

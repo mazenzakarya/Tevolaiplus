@@ -20,50 +20,92 @@ namespace Tevolai.APIs.Controllers
         [HttpPost("AddContactMessage")]
         public async Task<IActionResult> AddContactMessage([FromBody] ContactMessageDto dto)
         {
-            await _service.AddNewContactMessage(dto);
-            return Ok();
+            try
+            {
+                await _service.AddNewContactMessage(dto);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
         }
 
         //get paged contact messages
         [HttpGet("GetPagedContactMessages")]
         public async Task<IActionResult> GetPagedContactMessages([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
-            var pagedMessages = await _service.GetPagedAsync(page, pageSize);
-            return Ok(pagedMessages);
+            try
+            {
+                var pagedMessages = await _service.GetPagedAsync(page, pageSize);
+                return Ok(pagedMessages);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
         }
 
         //get contact message by id
         [HttpGet("GetContactMessageById/{id}")]
         public async Task<IActionResult> GetContactMessageById(int id)
         {
-            var message = await _service.GetByIdAsync(id);
-            if (message == null)
-                return NotFound();
-            return Ok(message);
+            try
+            {
+                var message = await _service.GetByIdAsync(id);
+                if (message == null)
+                    return NotFound(new { error = "Contact message not found" });
+                return Ok(message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
         }
 
         //delete contact message by id
         [HttpDelete("DeleteContactMessage/{id}")]
         public async Task<IActionResult> DeleteContactMessage(int id)
         {
-            await _service.DeleteAsync(id);
-            return Ok();
+            try
+            {
+                await _service.DeleteAsync(id);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
         }
 
         //mark contact message as read
         [HttpPut("MarkAsRead/{id}")]
         public async Task<IActionResult> MarkAsRead(int id)
         {
-            await _service.MarkAsReadAsync(id);
-            return Ok();
+            try
+            {
+                await _service.MarkAsReadAsync(id);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
         }
 
         //filter contact messages by read status
         [HttpGet("GetContactMessagesByReadStatus")]
         public async Task<IActionResult> GetContactMessagesByReadStatus([FromQuery] bool isRead)
         {
-            var messages = await _service.GetByReadStatusAsync(isRead);
-            return Ok(messages);
+            try
+            {
+                var messages = await _service.GetByReadStatusAsync(isRead);
+                return Ok(messages);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
         }
     }
 }

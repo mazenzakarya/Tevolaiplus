@@ -23,7 +23,7 @@ namespace Tevolai.APIs.Controllers
             try
             {
                 var totalRevenues = await _service.GetTotalRevenuesAmountAsync();
-                return Ok(totalRevenues);
+                return Ok(new { totalAmount = totalRevenues });
             }
             catch (Exception ex)
             {
@@ -33,25 +33,39 @@ namespace Tevolai.APIs.Controllers
 
         // Add Revenue
         [HttpPost("AddRevenue")]
-        public async Task<IActionResult> AddRevenue(RevenueDto dto)
+        public async Task<IActionResult> AddRevenue([FromBody] RevenueDto dto)
         {
-            await _service.AddRevenueAsync(dto);
-            return Ok();
+            try
+            {
+                await _service.AddRevenueAsync(dto);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
         }
 
         // Get Revenue by Id
         [HttpGet("GetRevenueById/{id}")]
         public async Task<IActionResult> GetRevenueById(int id)
         {
-            var revenue = await _service.GetRevenueByIdAsync(id);
-            if (revenue == null)
-                return NotFound();
-            return Ok(revenue);
+            try
+            {
+                var revenue = await _service.GetRevenueByIdAsync(id);
+                if (revenue == null)
+                    return NotFound(new { error = "Revenue not found" });
+                return Ok(revenue);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
         }
 
         // Edit Revenue
         [HttpPut("EditRevenue")]
-        public async Task<IActionResult> EditRevenue(RevenueDto dto)
+        public async Task<IActionResult> EditRevenue([FromBody] RevenueDto dto)
         {
             try
             {

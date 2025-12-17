@@ -9,5 +9,7 @@ namespace Tevolai.DAL.Repository.EmailCredentialRepo
         Task<EmailCredential?> GetByIdAsync(int id);
         Task SoftDeleteAsync(EmailCredential credential);
         Task UpdateAsync(EmailCredential credential);
+        Task UpdateLastUsedAndAuditAsync(EmailCredential credential);
+        Task<List<EmailCredential>> GetAllAsync(bool includeDeleted = false);
     }
 }

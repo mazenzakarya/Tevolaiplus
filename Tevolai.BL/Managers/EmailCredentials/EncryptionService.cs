@@ -6,17 +6,41 @@ namespace Tevolai.BL.Managers.EmailCredentials
 {
     public class EncryptionService
     {
-        private readonly string _key;
+        private readonly byte[] _key;
 
         public EncryptionService(IConfiguration config)
         {
-            _key = config["EncryptionKey"]!;
+            var keyString = config["EncryptionKey"] ?? throw new InvalidOperationException("EncryptionKey not found in configuration");
+            
+            // Ensure key is exactly 32 bytes (256 bits) for AES-256
+            var keyBytes = Encoding.UTF8.GetBytes(keyString);
+            if (keyBytes.Length < 32)
+            {
+                // Pad with zeros if too short
+                _key = new byte[32];
+                Array.Copy(keyBytes, _key, keyBytes.Length);
+            }
+            else if (keyBytes.Length > 32)
+            {
+                // Truncate if too long
+                _key = new byte[32];
+                Array.Copy(keyBytes, _key, 32);
+            }
+            else
+            {
+                _key = keyBytes;
+            }
         }
 
         public string Encrypt(string plainText)
         {
+            if (string.IsNullOrEmpty(plainText))
+                return string.Empty;
+
             using var aes = Aes.Create();
-            aes.Key = Encoding.UTF8.GetBytes(_key);
+            aes.Key = _key;
+            aes.Mode = CipherMode.CBC;
+            aes.Padding = PaddingMode.PKCS7;
             aes.GenerateIV();
 
             using var encryptor = aes.CreateEncryptor();
@@ -28,18 +52,33 @@ namespace Tevolai.BL.Managers.EmailCredentials
 
         public string Decrypt(string encryptedText)
         {
-            var parts = encryptedText.Split(':');
-            byte[] iv = Convert.FromBase64String(parts[0]);
-            byte[] cipherText = Convert.FromBase64String(parts[1]);
+            if (string.IsNullOrEmpty(encryptedText))
+                return string.Empty;
 
-            using var aes = Aes.Create();
-            aes.Key = Encoding.UTF8.GetBytes(_key);
-            aes.IV = iv;
+            try
+            {
+                var parts = encryptedText.Split(':');
+                if (parts.Length != 2)
+                    throw new CryptographicException("Invalid encrypted text format");
 
-            using var decryptor = aes.CreateDecryptor();
-            byte[] originalBytes = decryptor.TransformFinalBlock(cipherText, 0, cipherText.Length);
+                byte[] iv = Convert.FromBase64String(parts[0]);
+                byte[] cipherText = Convert.FromBase64String(parts[1]);
 
-            return Encoding.UTF8.GetString(originalBytes);
+                using var aes = Aes.Create();
+                aes.Key = _key;
+                aes.IV = iv;
+                aes.Mode = CipherMode.CBC;
+                aes.Padding = PaddingMode.PKCS7;
+
+                using var decryptor = aes.CreateDecryptor();
+                byte[] originalBytes = decryptor.TransformFinalBlock(cipherText, 0, cipherText.Length);
+
+                return Encoding.UTF8.GetString(originalBytes);
+            }
+            catch (Exception ex)
+            {
+                throw new CryptographicException("Failed to decrypt password", ex);
+            }
         }
     }
 }
