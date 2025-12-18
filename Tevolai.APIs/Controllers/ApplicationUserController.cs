@@ -7,7 +7,7 @@ using Tevolai.BL.Managers.ApplicationUsers;
 namespace Tevolai.APIs.Controllers
 {
     [Route("api/[controller]")]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize]
     [ApiController]
     public class ApplicationUserController : ControllerBase
     {

@@ -10,15 +10,18 @@ namespace Tevolai.APIs.Helpers
     {
         private readonly TevolaiDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
         private readonly EncryptionService _encryptionService;
 
         public DatabaseSeeder(
             TevolaiDbContext context,
             UserManager<ApplicationUser> userManager,
+            RoleManager<IdentityRole> roleManager,
             EncryptionService encryptionService)
         {
             _context = context;
             _userManager = userManager;
+            _roleManager = roleManager;
             _encryptionService = encryptionService;
         }
 
@@ -72,6 +75,11 @@ namespace Tevolai.APIs.Helpers
             };
 
             await _userManager.CreateAsync(adminUser, "Admin@123");
+
+            if (!await _roleManager.RoleExistsAsync("Admin"))
+                await _roleManager.CreateAsync(new IdentityRole("Admin"));
+
+            await _userManager.AddToRoleAsync(adminUser, "Admin");
         }
 
         private async Task<List<Customer>> SeedCustomersAsync()
