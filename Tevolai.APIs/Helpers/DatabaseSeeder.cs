@@ -24,8 +24,6 @@ namespace Tevolai.APIs.Helpers
 
         public async Task SeedAsync()
         {
-            // Ensure database is created (drops and recreates if needed)
-            await _context.Database.EnsureDeletedAsync();
             await _context.Database.EnsureCreatedAsync();
 
             // Seed Users
@@ -120,7 +118,7 @@ namespace Tevolai.APIs.Helpers
 
             await _context.Customers.AddRangeAsync(customers);
             await _context.SaveChangesAsync();
-            
+
             return customers;
         }
 
@@ -231,7 +229,7 @@ namespace Tevolai.APIs.Helpers
 
             await _context.ServicesOnDashBoards.AddRangeAsync(services);
             await _context.SaveChangesAsync();
-            
+
             return services;
         }
 
@@ -405,4 +403,3 @@ namespace Tevolai.APIs.Helpers
         }
     }
 }
-

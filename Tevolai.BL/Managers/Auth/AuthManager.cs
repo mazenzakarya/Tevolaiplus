@@ -45,7 +45,7 @@ namespace Tevolai.BL.Managers.Auth
             if (!isValid)
                 throw new Exception("Invalid email or password");
 
-            var token = GenerateToken(user);
+            var token = await GenerateTokenAsync(user);
 
             return new AuthResponseDto
             {
@@ -56,17 +56,23 @@ namespace Tevolai.BL.Managers.Auth
             };
         }
 
-        private string GenerateToken(ApplicationUser user)
+        private async Task<string> GenerateTokenAsync(ApplicationUser user)
         {
-            var claims = new[]
+            var claims = new List<Claim>
+                {
+                    new Claim(ClaimTypes.NameIdentifier, user.Id),
+                    new Claim(ClaimTypes.Name, user.UserName ?? ""),
+                    new Claim(ClaimTypes.Email, user.Email ?? "")
+                };
+
+            var roles = await _userManager.GetRolesAsync(user);
+            foreach (var role in roles)
             {
-        new Claim(ClaimTypes.NameIdentifier, user.Id),
-        new Claim(ClaimTypes.Name, user.UserName ?? ""),
-        new Claim(ClaimTypes.Email, user.Email ?? "")
-    };
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            }
 
             var key = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(_configuration["JWT:Key"])
+                Encoding.UTF8.GetBytes(_configuration["Jwt:Key"])
             );
 
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

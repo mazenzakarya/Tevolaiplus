@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Tevolai.BL.Managers.ApplicationUsers;
 using Tevolai.BL.Managers.Auth;
 using Tevolai.BL.Managers.ContactMessages;
 using Tevolai.BL.Managers.Customers;
@@ -24,6 +25,7 @@ namespace Tevolai.BL
             services.AddScoped<IServicesOnMainService, ServicesOnMainService>();
             services.AddScoped<IExpenseService, ExpenseService>();
             services.AddScoped<ICustomerService, CustomerService>();
+            services.AddScoped<IApplicationUserService, ApplicationUserService>();
         }
     }
 }

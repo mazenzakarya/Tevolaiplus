@@ -27,7 +27,7 @@ namespace Tevolai.DAL.Repository.RevenueRepo
         // GET TOTAL COUNT OF REVENUES
         public async Task<decimal> GetTotalRevenuesAmountAsync()
         {
-            return await db.Revenues.AsNoTracking().SumAsync(r => r.Amount);
+            return await db.Revenues.AsNoTracking().SumAsync(r => r.Amount) - await db.Expenses.AsNoTracking().SumAsync(e => e.Amount);
         }
 
         // ADD NEW REVENUE

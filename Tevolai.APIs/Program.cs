@@ -1,14 +1,15 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
 using System.Text;
+using Tevolai.APIs.Helpers;
 using Tevolai.BL;
 using Tevolai.BL.Managers.Auth;
 using Tevolai.DAL;
 using Tevolai.DAL.Context;
 using Tevolai.DAL.Entities;
-using Tevolai.APIs.Helpers;
 
 namespace Tevolai.APIs
 {
@@ -18,13 +19,9 @@ namespace Tevolai.APIs
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
-
+            // Add services
             builder.Services.AddControllers();
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
-            //cors stuff
+
             builder.Services.AddCors(options =>
             {
                 options.AddDefaultPolicy(policy =>
@@ -32,31 +29,70 @@ namespace Tevolai.APIs
             });
 
             builder.Services.AddDbContext<TevolaiDbContext>(options =>
-            options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+            builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+                .AddEntityFrameworkStores<TevolaiDbContext>()
+                .AddDefaultTokenProviders();
+
+            builder.Services.AddScoped<AuthManager>();
+            builder.Services.AddScoped<DatabaseSeeder>();
+
+            builder.Services.AddDALServices();
+            builder.Services.AddBLServices();
+
+            // JWT Authentication
+            var jwtSecret = builder.Configuration["Jwt:Key"];
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(o =>
                 {
                     o.TokenValidationParameters = new TokenValidationParameters
                     {
                         ValidateIssuerSigningKey = true,
-
                         ValidateLifetime = true,
-
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("This-is-very-secyrity-key-it-should-be-32-chars"))
+                        ValidateIssuer = false,
+                        ValidateAudience = false,
+                        RoleClaimType = ClaimTypes.Role,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret))
                     };
                 });
 
-            builder.Services.AddDALServices();
-            builder.Services.AddBLServices();
+            // Swagger
+            builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+                {
+                    Title = "Tevolai API",
+                    Version = "v1"
+                });
 
-            //Auth services  // read again
-            builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
-             .AddEntityFrameworkStores<TevolaiDbContext>()
-             .AddDefaultTokenProviders();
-            builder.Services.AddScoped<AuthManager>();
-            builder.Services.AddScoped<DatabaseSeeder>();
-            
+                c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+                {
+                    Name = "Authorization",
+                    Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+                    Scheme = "Bearer",
+                    BearerFormat = "JWT",
+                    In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+                    Description = "JWT Authorization header using the Bearer scheme."
+                });
+
+                c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+                {
+                    {
+                        new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+                        {
+                            Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                            {
+                                Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        },
+                        Array.Empty<string>()
+                    }
+                });
+            });
+
             var app = builder.Build();
 
             // Seed database in development
@@ -69,17 +105,17 @@ namespace Tevolai.APIs
                 }
             }
 
-            // Configure the HTTP request pipeline.
+            // Configure middleware
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
-            app.UseCors();
+
             app.UseHttpsRedirection();
+            app.UseCors();
 
             app.UseAuthentication();
-
             app.UseAuthorization();
 
             app.MapControllers();
