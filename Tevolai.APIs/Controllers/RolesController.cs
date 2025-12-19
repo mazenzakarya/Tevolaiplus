@@ -73,7 +73,31 @@ namespace Tevolai.APIs.Controllers
 
             return Ok(new { message = "Role assigned", roleName, userId = user.Id });
         }
+
+        //delete role from user
+        [HttpPost("remove")]
+        public async Task<IActionResult> RemoveRole([FromBody] AssignRoleRequest request)
+        {
+            if (request == null || string.IsNullOrWhiteSpace(request.RoleName))
+                return BadRequest(new { message = "RoleName is required" });
+            if (string.IsNullOrWhiteSpace(request.UserId) && string.IsNullOrWhiteSpace(request.Email))
+                return BadRequest(new { message = "UserId or Email is required" });
+            var roleName = request.RoleName.Trim();
+            if (!await _roleManager.RoleExistsAsync(roleName))
+                return NotFound(new { message = "Role not found" });
+            ApplicationUser? user = null;
+            if (!string.IsNullOrWhiteSpace(request.UserId))
+                user = await _userManager.FindByIdAsync(request.UserId.Trim());
+            else if (!string.IsNullOrWhiteSpace(request.Email))
+                user = await _userManager.FindByEmailAsync(request.Email.Trim());
+            if (user == null)
+                return NotFound(new { message = "User not found" });
+            if (!await _userManager.IsInRoleAsync(user, roleName))
+                return Ok(new { message = "User does not have the role", roleName });
+            var result = await _userManager.RemoveFromRoleAsync(user, roleName);
+            if (!result.Succeeded)
+                return BadRequest(result.Errors);
+            return Ok(new { message = "Role removed", roleName, userId = user.Id });
+        }
     }
 }
-
-

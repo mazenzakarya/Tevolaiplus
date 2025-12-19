@@ -7,7 +7,7 @@ using Tevolai.BL.Managers.ApplicationUsers;
 namespace Tevolai.APIs.Controllers
 {
     [Route("api/[controller]")]
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     [ApiController]
     public class ApplicationUserController : ControllerBase
     {

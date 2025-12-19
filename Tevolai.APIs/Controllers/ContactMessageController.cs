@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Tevolai.BL.DTOs.ContactMessageDto;
 using Tevolai.BL.Managers.ContactMessages;
@@ -31,6 +32,7 @@ namespace Tevolai.APIs.Controllers
             }
         }
 
+        [Authorize(Roles = "Admin")]
         //get paged contact messages
         [HttpGet("GetPagedContactMessages")]
         public async Task<IActionResult> GetPagedContactMessages([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
@@ -46,6 +48,7 @@ namespace Tevolai.APIs.Controllers
             }
         }
 
+        [Authorize(Roles = "Admin")]
         //get contact message by id
         [HttpGet("GetContactMessageById/{id}")]
         public async Task<IActionResult> GetContactMessageById(int id)
@@ -63,6 +66,7 @@ namespace Tevolai.APIs.Controllers
             }
         }
 
+        [Authorize(Roles = "Admin")]
         //delete contact message by id
         [HttpDelete("DeleteContactMessage/{id}")]
         public async Task<IActionResult> DeleteContactMessage(int id)
@@ -78,6 +82,7 @@ namespace Tevolai.APIs.Controllers
             }
         }
 
+        [Authorize(Roles = "Admin")]
         //mark contact message as read
         [HttpPut("MarkAsRead/{id}")]
         public async Task<IActionResult> MarkAsRead(int id)
@@ -93,6 +98,7 @@ namespace Tevolai.APIs.Controllers
             }
         }
 
+        [Authorize(Roles = "Admin")]
         //filter contact messages by read status
         [HttpGet("GetContactMessagesByReadStatus")]
         public async Task<IActionResult> GetContactMessagesByReadStatus([FromQuery] bool isRead)

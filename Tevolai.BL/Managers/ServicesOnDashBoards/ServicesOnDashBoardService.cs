@@ -1,5 +1,8 @@
-﻿using Tevolai.BL.DTOs.ServicesOnDashBoardDto;
+﻿using Tevolai.BL.DTOs.ApplicationUserDto;
+using Tevolai.BL.DTOs.ServicesOnDashBoardDto;
+using Tevolai.BL.DTOs.ServicesOnMainDto;
 using Tevolai.DAL.Entities;
+using Microsoft.EntityFrameworkCore;
 using Tevolai.DAL.Helpers;
 using Tevolai.DAL.Repository.ServicesOnDashBoardRepo;
 
@@ -7,11 +10,11 @@ namespace Tevolai.BL.Managers.ServicesOnDashBoards
 {
     public class ServicesOnDashBoardService : IServicesOnDashBoardService
     {
-        private readonly IServicesOnDashBoardRepository _service;
+        private readonly IServicesOnDashBoardRepository _repo;
 
         public ServicesOnDashBoardService(IServicesOnDashBoardRepository service)
         {
-            _service = service;
+            _repo = service;
         }
 
         //add new services
@@ -19,24 +22,25 @@ namespace Tevolai.BL.Managers.ServicesOnDashBoards
         {
             var entity = new ServicesOnDashBoard
             {
-                CustomerId = Dto.CustomerId,
                 ServiceName = Dto.ServiceName,
                 Domain = Dto.Domain,
                 UserName = Dto.UserName,
                 CMS = Dto.CMS,
+                CustomerId = Dto.CustomerId,
                 HostingServer = Dto.HostingServer,
+                ApplicationUserId = Dto.ApplicationUserId,
                 Status = Dto.Status,
                 Notes = Dto.Notes,
                 CreatedAt = DateTime.UtcNow,
                 IsDeleted = false
             };
-            await _service.AddNewServiceAsync(entity);
+            await _repo.AddNewServiceAsync(entity);
         }
 
         //get all services
         public async Task<List<ServiesOnDashBoardDto>> GetServiceOnDashBoardsAsync()
         {
-            var services = await _service.GetAllServicesAsync();
+            var services = await _repo.GetAllServicesAsync();
             var dtoList = services.Select(s => new ServiesOnDashBoardDto
             {
                 Id = s.Id,
@@ -47,6 +51,7 @@ namespace Tevolai.BL.Managers.ServicesOnDashBoards
                 CMS = s.CMS,
                 HostingServer = s.HostingServer,
                 Status = s.Status,
+                CreatedAt = DateTime.UtcNow,
                 Notes = s.Notes
             }).ToList();
             return dtoList;
@@ -55,7 +60,7 @@ namespace Tevolai.BL.Managers.ServicesOnDashBoards
         //get service by id
         public async Task<ServiesOnDashBoardDto?> GetServiceOnDashBoardByIdAsync(int id)
         {
-            var service = await _service.GetServiceByIdAsync(id);
+            var service = await _repo.GetServiceByIdAsync(id);
             if (service == null)
                 return null;
             var dto = new ServiesOnDashBoardDto
@@ -76,7 +81,7 @@ namespace Tevolai.BL.Managers.ServicesOnDashBoards
         //delete service
         public async Task<ServiesOnDashBoardDto?> DeleteServiceOnDashBoardAsync(int id)
         {
-            var service = await _service.DeleteServices(id);
+            var service = await _repo.DeleteServices(id);
             if (service == null)
                 return null;
             var dto = new ServiesOnDashBoardDto
@@ -97,9 +102,9 @@ namespace Tevolai.BL.Managers.ServicesOnDashBoards
         // get items paginated
         public async Task<PagedList<ServiesOnDashBoardDto>> GetPaginatedServicesOnDashBoardAsync(int pageNumber, int pageSize)
         {
-            var totalCount = await _service.CountTotalServicesAsync();
+            var totalCount = await _repo.CountTotalServicesAsync();
 
-            var services = await _service.GetServicesWithPaginationAsync(pageNumber, pageSize);
+            var services = await _repo.GetServicesWithPaginationAsync(pageNumber, pageSize);
 
             var dtoList = services.Select(s => new ServiesOnDashBoardDto
             {
@@ -109,6 +114,7 @@ namespace Tevolai.BL.Managers.ServicesOnDashBoards
                 Domain = s.Domain,
                 UserName = s.UserName,
                 CMS = s.CMS,
+                CreatedAt = DateTime.UtcNow,
                 HostingServer = s.HostingServer,
                 Status = s.Status,
                 Notes = s.Notes
@@ -132,13 +138,13 @@ namespace Tevolai.BL.Managers.ServicesOnDashBoards
                 Status = Dto.Status,
                 Notes = Dto.Notes
             };
-            await _service.UpdateServiceAsync(entity);
+            await _repo.UpdateServiceAsync(entity);
         }
 
         // Search by Service Name
         public async Task<List<ServiesOnDashBoardDto>> SearchServicesByNameAsync(string serviceName)
         {
-            var services = await _service.SearchServicesByNameAsync(serviceName);
+            var services = await _repo.SearchServicesByNameAsync(serviceName);
             var dtoList = services.Select(s => new ServiesOnDashBoardDto
             {
                 Id = s.Id,
@@ -157,7 +163,7 @@ namespace Tevolai.BL.Managers.ServicesOnDashBoards
         // Filter by Status
         public async Task<List<ServiesOnDashBoardDto>> FilterServicesByStatusAsync(WebsiteStatus status)
         {
-            var services = await _service.FilterServicesByStatusAsync(status);
+            var services = await _repo.FilterServicesByStatusAsync(status);
             var dtoList = services.Select(s => new ServiesOnDashBoardDto
             {
                 Id = s.Id,
@@ -176,7 +182,7 @@ namespace Tevolai.BL.Managers.ServicesOnDashBoards
         // Sort by CreatedAt
         public async Task<List<ServiesOnDashBoardDto>> SortServicesByCreatedAtAsync(bool ascending)
         {
-            var services = await _service.SortServicesByCreatedAtAsync(ascending);
+            var services = await _repo.SortServicesByCreatedAtAsync(ascending);
             var dtoList = services.Select(s => new ServiesOnDashBoardDto
             {
                 Id = s.Id,
@@ -195,7 +201,7 @@ namespace Tevolai.BL.Managers.ServicesOnDashBoards
         //filter by CMS
         public async Task<List<ServiesOnDashBoardDto>> FilterServicesByCMSAsync(WebsiteCMS cms)
         {
-            var services = await _service.FilterServicesByCMSAsync(cms);
+            var services = await _repo.FilterServicesByCMSAsync(cms);
             var dtoList = services.Select(s => new ServiesOnDashBoardDto
             {
                 Id = s.Id,
@@ -214,7 +220,26 @@ namespace Tevolai.BL.Managers.ServicesOnDashBoards
         // Count Total Services
         public async Task<int> CountTotalServicesAsync()
         {
-            return await _service.CountTotalServicesAsync();
+            return await _repo.CountTotalServicesAsync();
+        }
+
+        // filter services on main by application user
+        public async Task<List<ServiesOnDashBoardDto>> FilterServicesByCustomerAsync(string userId)
+        {
+            var entity = _repo.FilterServicesByCustomerAsync(userId);
+            var dtoList = entity.Select(s => new ServiesOnDashBoardDto
+            {
+                Id = s.Id,
+                CustomerId = s.CustomerId,
+                ServiceName = s.ServiceName,
+                Domain = s.Domain,
+                UserName = s.UserName,
+                CMS = s.CMS,
+                HostingServer = s.HostingServer,
+                Status = s.Status,
+                Notes = s.Notes
+            }).ToListAsync();
+            return await dtoList;
         }
     }
 }

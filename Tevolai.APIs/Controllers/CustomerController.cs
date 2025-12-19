@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Tevolai.BL.DTOs.CustomerDto;
 using Tevolai.BL.Managers.Customers;
@@ -7,6 +8,7 @@ namespace Tevolai.APIs.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = "Admin")]
     public class CustomerController : ControllerBase
     {
         private readonly ICustomerService _service;

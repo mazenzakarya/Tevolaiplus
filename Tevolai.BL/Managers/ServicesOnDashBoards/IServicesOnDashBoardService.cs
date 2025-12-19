@@ -25,5 +25,7 @@ namespace Tevolai.BL.Managers.ServicesOnDashBoards
         Task<List<ServiesOnDashBoardDto>> SortServicesByCreatedAtAsync(bool ascending);
 
         Task UpdateServiceOnDashBoardAsync(ServiesOnDashBoardDto Dto);
+
+        Task<List<ServiesOnDashBoardDto>> FilterServicesByCustomerAsync(string userId);
     }
 }

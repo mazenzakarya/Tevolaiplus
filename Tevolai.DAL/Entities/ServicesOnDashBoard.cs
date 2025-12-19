@@ -23,12 +23,22 @@ namespace Tevolai.DAL.Entities
         Custom
     }
 
+    public enum PaidStatus
+    {
+        paid,
+        unpaid,
+        partialPaid
+    }
+
     public class ServicesOnDashBoard
     {
         public int Id { get; set; }
 
         [ForeignKey("Customer")]
         public int CustomerId { get; set; }
+
+        [ForeignKey("ApplicationUser")]
+        public string? ApplicationUserId { get; set; } = string.Empty;
 
         public string ServiceName { get; set; } = string.Empty; // dev can add any name to identify the service
         public string Domain { get; set; } = string.Empty;
@@ -39,8 +49,11 @@ namespace Tevolai.DAL.Entities
         public string? Notes { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public bool IsDeleted { get; set; } = false;
+        public PaidStatus PaidStatus { get; set; } = PaidStatus.paid;
 
         // Navigation
         public virtual Customer? Customer { get; set; }
+
+        public virtual ApplicationUser? ApplicationUsers { get; set; }
     }
 }

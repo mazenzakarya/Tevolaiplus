@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Tevolai.BL.DTOs.RevenueDto;
 using Tevolai.BL.Managers.Revenues;
@@ -7,6 +8,7 @@ namespace Tevolai.APIs.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = "Admin")]
     public class RevenueController : ControllerBase
     {
         private readonly IRevenueService _service;

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Tevolai.BL.DTOs.ServicesOnMainDto;
 using Tevolai.BL.Managers.ServicesOnMains;
@@ -48,6 +49,7 @@ namespace Tevolai.APIs.Controllers
             }
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> AddServiceOnMain([FromBody] ServicesOnMainDto service)
         {
@@ -62,6 +64,7 @@ namespace Tevolai.APIs.Controllers
             }
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPut]
         public async Task<IActionResult> UpdateServiceOnMain([FromBody] ServicesOnMainDto service)
         {
@@ -76,6 +79,7 @@ namespace Tevolai.APIs.Controllers
             }
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteServiceOnMain(int id)
         {

@@ -1,10 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Tevolai.BL.Managers.EmailCredentials;
 
 namespace Tevolai.APIs.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = "Admin")]
     public class EmailCredentialsController : ControllerBase
     {
         private readonly IEmailCredentialService _service;
@@ -27,7 +29,7 @@ namespace Tevolai.APIs.Controllers
         [HttpPost("AddCredential")]
         public async Task<IActionResult> AddCredentialAsync([FromBody] AddEmailCredentialRequest request)
         {
-            if (request == null || string.IsNullOrWhiteSpace(request.EmailAddress) || 
+            if (request == null || string.IsNullOrWhiteSpace(request.EmailAddress) ||
                 string.IsNullOrWhiteSpace(request.Password) || string.IsNullOrWhiteSpace(request.UserName))
                 return BadRequest(new { error = "EmailAddress, Password, and UserName are required" });
 

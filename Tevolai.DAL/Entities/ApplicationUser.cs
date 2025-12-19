@@ -9,5 +9,6 @@ namespace Tevolai.DAL.Entities
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public bool IsActive { get; set; } = true;
         public bool IsDeleted { get; set; } = false;
+        public virtual ICollection<ServicesOnDashBoard> ServicesOnDashBoards { get; set; } = new HashSet<ServicesOnDashBoard>();
     }
 }

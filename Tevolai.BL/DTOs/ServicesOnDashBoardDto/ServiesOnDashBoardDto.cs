@@ -17,6 +17,7 @@ namespace Tevolai.BL.DTOs.ServicesOnDashBoardDto
         public string ServiceName { get; set; } = string.Empty; // dev can add any name to identify the service
         public string Domain { get; set; } = string.Empty;
         public string UserName { get; set; } = string.Empty;
+        public string ApplicationUserId { get; set; } = string.Empty;
         public WebsiteCMS CMS { get; set; }
         public string? HostingServer { get; set; }
         public WebsiteStatus Status { get; set; }

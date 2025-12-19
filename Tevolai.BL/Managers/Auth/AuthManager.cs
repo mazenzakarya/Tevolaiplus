@@ -25,7 +25,9 @@ namespace Tevolai.BL.Managers.Auth
             var user = new ApplicationUser
             {
                 UserName = registerDto.UserName,
-                Email = registerDto.Email
+                Email = registerDto.Email,
+                FullName = registerDto.FullName,
+                PhoneNumber = registerDto.PhoneNumber
             };
 
             var result = await _userManager.CreateAsync(user, registerDto.Password);
@@ -52,7 +54,8 @@ namespace Tevolai.BL.Managers.Auth
                 Token = token,
                 ExpiresIn = 3600,
                 UserName = user.UserName!,
-                Email = user.Email
+                Email = user.Email,
+                Id = user.Id
             };
         }
 

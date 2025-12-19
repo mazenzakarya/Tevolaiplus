@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Tevolai.BL.DTOs.ExpenseDto;
 using Tevolai.BL.Managers.Expenses;
@@ -7,6 +8,7 @@ namespace Tevolai.APIs.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = "Admin")]
     public class ExpenseController : ControllerBase
     {
         private readonly IExpenseService _service;

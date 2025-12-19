@@ -1,14 +1,16 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Tevolai.BL.Managers.ServicesOnDashBoards;
 using Tevolai.BL.DTOs.ServicesOnDashBoardDto;
 using Tevolai.BL.DTOs.ServicesOnMainDto;
+using Tevolai.BL.Managers.ServicesOnDashBoards;
 using Tevolai.DAL.Entities;
 
 namespace Tevolai.APIs.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ServicesOnDashBoardController : ControllerBase
     {
         private readonly IServicesOnDashBoardService _service;
@@ -18,6 +20,7 @@ namespace Tevolai.APIs.Controllers
             _service = service;
         }
 
+        [Authorize(Roles = "Admin")]
         // add new service on dashboard
         [HttpPost("AddServiceOnDashBoard")]
         public async Task<IActionResult> AddServiceOnDashBoard(ServiesOnDashBoardDto dto)
@@ -33,6 +36,7 @@ namespace Tevolai.APIs.Controllers
             }
         }
 
+        [Authorize(Roles = "Admin")]
         // get all services on dashboard
         [HttpGet("GetAllServicesOnDashBoard")]
         public async Task<IActionResult> GetAllServicesOnDashBoard()
@@ -48,6 +52,7 @@ namespace Tevolai.APIs.Controllers
             }
         }
 
+        [Authorize(Roles = "Admin")]
         // get service on dashboard by id
         [HttpGet("GetServiceOnDashBoardById/{id}")]
         public async Task<IActionResult> GetServiceOnDashBoardById(int id)
@@ -65,6 +70,7 @@ namespace Tevolai.APIs.Controllers
             }
         }
 
+        [Authorize(Roles = "Admin")]
         // delete service on dashboard by id
         [HttpDelete("DeleteServiceOnDashBoard/{id}")]
         public async Task<IActionResult> DeleteServiceOnDashBoard(int id)
@@ -81,6 +87,7 @@ namespace Tevolai.APIs.Controllers
         }
 
         // update service on dashboard
+        [Authorize(Roles = "Admin")]
         [HttpPut("UpdateServiceOnDashBoard")]
         public async Task<IActionResult> UpdateServiceOnDashBoard(ServiesOnDashBoardDto Dto)
         {
@@ -96,6 +103,7 @@ namespace Tevolai.APIs.Controllers
         }
 
         // search services by name
+        [Authorize(Roles = "Admin")]
         [HttpGet("SearchServicesByName/{serviceName}")]
         public async Task<IActionResult> SearchServicesByName(string serviceName)
         {
@@ -111,6 +119,7 @@ namespace Tevolai.APIs.Controllers
         }
 
         // filter services by CMS
+        [Authorize(Roles = "Admin")]
         [HttpGet("FilterServicesByCMS/{cms}")]
         public IActionResult SearchServicesById(WebsiteCMS cms)
         {
@@ -131,6 +140,7 @@ namespace Tevolai.APIs.Controllers
         }
 
         // filter services by status
+        [Authorize(Roles = "Admin")]
         [HttpGet("FilterServicesByStatus/{status}")]
         public async Task<IActionResult> FilterServicesByStatus(WebsiteStatus status)
         {
@@ -146,12 +156,28 @@ namespace Tevolai.APIs.Controllers
         }
 
         // sort services by created at
+        [Authorize(Roles = "Admin")]
         [HttpGet("SortServicesByCreatedAt/{ascending}")]
         public async Task<IActionResult> SortServicesByCreatedAt(bool ascending)
         {
             try
             {
                 var services = await _service.SortServicesByCreatedAtAsync(ascending);
+                return Ok(services);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
+        // get services on dashboard by application user id
+        [HttpGet("GetServicesByUserId/{userId}")]
+        public async Task<IActionResult> GetServicesByUserId(string userId)
+        {
+            try
+            {
+                var services = await _service.FilterServicesByCustomerAsync(userId);
                 return Ok(services);
             }
             catch (Exception ex)

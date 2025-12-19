@@ -29,41 +29,55 @@ namespace Tevolai.APIs.Helpers
         {
             await _context.Database.EnsureCreatedAsync();
 
-            // Seed Users
-            await SeedUsersAsync();
+            // 1?? Seed Roles
+            await SeedRolesAsync();
 
-            // Seed Customers
+            // 2?? Seed Users
+            var users = await SeedUsersAsync();
+
+            // Users references
+            var adminUser = users.First(u => u.UserName == "admin@tevolai.com");
+            var customerUser1 = users.First(u => u.UserName == "johndoe1");
+            var customerUser2 = users.First(u => u.UserName == "johndoe2");
+
+            // 3?? Seed Customers
             var customers = await SeedCustomersAsync();
             var customer1 = customers[0];
             var customer2 = customers[1];
-            var customer3 = customers[2];
 
-            // Seed Services on Main
+            // 4?? Seed Services on Main
             await SeedServicesOnMainAsync();
 
-            // Seed Services on Dashboard
-            var services = await SeedServicesOnDashboardAsync(customer1, customer2, customer3);
-            var service1 = services[0];
-            var service2 = services[1];
-            var service3 = services[2];
+            // 5?? Seed Services on Dashboard (linked with Users)
+            await SeedServicesOnDashboardAsync(customer1, customer2, adminUser, customerUser1, customerUser2);
 
-            // Seed Email Credentials
-            await SeedEmailCredentialsAsync(customer1, customer2, customer3);
+            // 6?? Seed Email Credentials
+            await SeedEmailCredentialsAsync(customer1, customer2);
 
-            // Seed Expenses
+            // 7?? Seed Expenses
             await SeedExpensesAsync();
 
-            // Seed Revenues
-            await SeedRevenuesAsync(customer1, customer2, service1, service2);
+            // 8?? Seed Revenues
+            await SeedRevenuesAsync(customer1, customer2);
 
-            // Seed Contact Messages
+            // 9?? Seed Contact Messages
             await SeedContactMessagesAsync();
         }
 
-        private async Task SeedUsersAsync()
+        private async Task SeedRolesAsync()
+        {
+            var roles = new[] { "Admin", "Customer" };
+            foreach (var role in roles)
+            {
+                if (!await _roleManager.RoleExistsAsync(role))
+                    await _roleManager.CreateAsync(new IdentityRole(role));
+            }
+        }
+
+        private async Task<List<ApplicationUser>> SeedUsersAsync()
         {
             if (await _userManager.Users.AnyAsync())
-                return;
+                return await _userManager.Users.ToListAsync();
 
             var adminUser = new ApplicationUser
             {
@@ -73,13 +87,32 @@ namespace Tevolai.APIs.Helpers
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
             };
+            var customerUser1 = new ApplicationUser
+            {
+                UserName = "johndoe1",
+                Email = "johndoe1@example.com",
+                FullName = "John Doe",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            };
+            var customerUser2 = new ApplicationUser
+            {
+                UserName = "johndoe2",
+                Email = "johndoe2@example.com",
+                FullName = "John Doe2",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            };
 
             await _userManager.CreateAsync(adminUser, "Admin@123");
-
-            if (!await _roleManager.RoleExistsAsync("Admin"))
-                await _roleManager.CreateAsync(new IdentityRole("Admin"));
+            await _userManager.CreateAsync(customerUser1, "Password@123");
+            await _userManager.CreateAsync(customerUser2, "Password@123");
 
             await _userManager.AddToRoleAsync(adminUser, "Admin");
+            await _userManager.AddToRoleAsync(customerUser1, "Customer");
+            await _userManager.AddToRoleAsync(customerUser2, "Customer");
+
+            return new List<ApplicationUser> { adminUser, customerUser1, customerUser2 };
         }
 
         private async Task<List<Customer>> SeedCustomersAsync()
@@ -110,17 +143,6 @@ namespace Tevolai.APIs.Helpers
                     Notes = "Regular client",
                     CreatedAt = DateTime.UtcNow.AddDays(-25),
                     IsDeleted = false
-                },
-                new Customer
-                {
-                    FullName = "Ahmed Hassan",
-                    Email = "ahmed.hassan@example.com",
-                    Phone = "+20-100-123-4567",
-                    CompanyName = "Middle East Trading",
-                    Country = "Egypt",
-                    Notes = "International client",
-                    CreatedAt = DateTime.UtcNow.AddDays(-20),
-                    IsDeleted = false
                 }
             };
 
@@ -132,8 +154,7 @@ namespace Tevolai.APIs.Helpers
 
         private async Task SeedServicesOnMainAsync()
         {
-            if (await _context.ServicesOnMains.AnyAsync())
-                return;
+            if (await _context.ServicesOnMains.AnyAsync()) return;
 
             var services = new List<ServicesOnMain>
             {
@@ -158,28 +179,6 @@ namespace Tevolai.APIs.Helpers
                     IsActive = true,
                     CreatedAt = DateTime.UtcNow.AddDays(-12),
                     IsDeleted = false
-                },
-                new ServicesOnMain
-                {
-                    Title = "Mobile App Development",
-                    Description = "Native and cross-platform mobile applications",
-                    Price = 10000.00m,
-                    ImageUrl = "/images/services/mobile-app.jpg",
-                    Category = "Mobile",
-                    IsActive = true,
-                    CreatedAt = DateTime.UtcNow.AddDays(-10),
-                    IsDeleted = false
-                },
-                new ServicesOnMain
-                {
-                    Title = "SEO Optimization",
-                    Description = "Search engine optimization services",
-                    Price = 2000.00m,
-                    ImageUrl = "/images/services/seo.jpg",
-                    Category = "Marketing",
-                    IsActive = true,
-                    CreatedAt = DateTime.UtcNow.AddDays(-8),
-                    IsDeleted = false
                 }
             };
 
@@ -187,10 +186,9 @@ namespace Tevolai.APIs.Helpers
             await _context.SaveChangesAsync();
         }
 
-        private async Task<List<ServicesOnDashBoard>> SeedServicesOnDashboardAsync(Customer customer1, Customer customer2, Customer customer3)
+        private async Task SeedServicesOnDashboardAsync(Customer customer1, Customer customer2, ApplicationUser adminUser, ApplicationUser customerUser1, ApplicationUser customerUser2)
         {
-            if (await _context.ServicesOnDashBoards.AnyAsync())
-                return await _context.ServicesOnDashBoards.Where(s => !s.IsDeleted).ToListAsync();
+            if (await _context.ServicesOnDashBoards.AnyAsync()) return;
 
             var services = new List<ServicesOnDashBoard>
             {
@@ -199,11 +197,13 @@ namespace Tevolai.APIs.Helpers
                     CustomerId = customer1.Id,
                     ServiceName = "John's WordPress Site",
                     Domain = "johndoe.com",
+                    ApplicationUserId = adminUser.Id,
                     UserName = "johndoe_admin",
                     CMS = WebsiteCMS.WordPress,
                     HostingServer = "Bluehost",
                     Status = WebsiteStatus.Active,
                     Notes = "Production site - High traffic",
+                    PaidStatus = PaidStatus.paid,
                     CreatedAt = DateTime.UtcNow.AddDays(-20),
                     IsDeleted = false
                 },
@@ -212,39 +212,25 @@ namespace Tevolai.APIs.Helpers
                     CustomerId = customer2.Id,
                     ServiceName = "Jane's E-Commerce Platform",
                     Domain = "janeshop.com",
+                    ApplicationUserId = customerUser2.Id,
                     UserName = "jane_admin",
                     CMS = WebsiteCMS.DotNet,
                     HostingServer = "Azure",
                     Status = WebsiteStatus.Active,
                     Notes = "E-commerce platform with payment integration",
+                    PaidStatus = PaidStatus.unpaid,
                     CreatedAt = DateTime.UtcNow.AddDays(-15),
-                    IsDeleted = false
-                },
-                new ServicesOnDashBoard
-                {
-                    CustomerId = customer3.Id,
-                    ServiceName = "Ahmed's Business Site",
-                    Domain = "ahmedbusiness.com",
-                    UserName = "ahmed_user",
-                    CMS = WebsiteCMS.Custom,
-                    HostingServer = "AWS",
-                    Status = WebsiteStatus.InProgress,
-                    Notes = "Under development",
-                    CreatedAt = DateTime.UtcNow.AddDays(-10),
                     IsDeleted = false
                 }
             };
 
             await _context.ServicesOnDashBoards.AddRangeAsync(services);
             await _context.SaveChangesAsync();
-
-            return services;
         }
 
-        private async Task SeedEmailCredentialsAsync(Customer customer1, Customer customer2, Customer customer3)
+        private async Task SeedEmailCredentialsAsync(Customer customer1, Customer customer2)
         {
-            if (await _context.EmailCredentials.AnyAsync())
-                return;
+            if (await _context.EmailCredentials.AnyAsync()) return;
 
             var credentials = new List<EmailCredential>
             {
@@ -269,17 +255,6 @@ namespace Tevolai.APIs.Helpers
                     Notes = "Support email for e-commerce platform",
                     CreatedAt = DateTime.UtcNow.AddDays(-15),
                     IsDeleted = false
-                },
-                new EmailCredential
-                {
-                    CustomerId = customer3.Id,
-                    EmailAddress = "info@ahmedbusiness.com",
-                    EncryptedPassword = _encryptionService.Encrypt("Business789!"),
-                    UserName = "ahmed_info",
-                    HostingPlatform = "AWS",
-                    Notes = "Business contact email",
-                    CreatedAt = DateTime.UtcNow.AddDays(-10),
-                    IsDeleted = false
                 }
             };
 
@@ -289,79 +264,45 @@ namespace Tevolai.APIs.Helpers
 
         private async Task SeedExpensesAsync()
         {
-            if (await _context.Expenses.AnyAsync())
-                return;
+            if (await _context.Expenses.AnyAsync()) return;
 
             var expenses = new List<Expense>
             {
-                new Expense
-                {
-                    Title = "Server Hosting",
-                    Amount = 150.00m,
-                    Category = "Infrastructure",
-                    Date = DateTime.UtcNow.AddDays(-5),
-                    Notes = "Monthly hosting fee",
-                    IsDeleted = false
-                },
-                new Expense
-                {
-                    Title = "Domain Renewal",
-                    Amount = 15.00m,
-                    Category = "Domain",
-                    Date = DateTime.UtcNow.AddDays(-3),
-                    Notes = "Annual domain renewal",
-                    IsDeleted = false
-                },
-                new Expense
-                {
-                    Title = "SSL Certificate",
-                    Amount = 50.00m,
-                    Category = "Security",
-                    Date = DateTime.UtcNow.AddDays(-1),
-                    Notes = "SSL certificate purchase",
-                    IsDeleted = false
-                }
+                new Expense { Title = "Server Hosting", Amount = 150.00m, Category = "Infrastructure", Date = DateTime.UtcNow.AddDays(-5), Notes = "Monthly hosting fee", IsDeleted = false },
+                new Expense { Title = "Domain Renewal", Amount = 15.00m, Category = "Domain", Date = DateTime.UtcNow.AddDays(-3), Notes = "Annual domain renewal", IsDeleted = false },
+                new Expense { Title = "SSL Certificate", Amount = 50.00m, Category = "Security", Date = DateTime.UtcNow.AddDays(-1), Notes = "SSL certificate purchase", IsDeleted = false }
             };
 
             await _context.Expenses.AddRangeAsync(expenses);
             await _context.SaveChangesAsync();
         }
 
-        private async Task SeedRevenuesAsync(Customer customer1, Customer customer2, ServicesOnDashBoard service1, ServicesOnDashBoard service2)
+        private async Task SeedRevenuesAsync(Customer customer1, Customer customer2)
         {
-            if (await _context.Revenues.AnyAsync())
-                return;
+            if (await _context.Revenues.AnyAsync()) return;
+
+            var dashboardServices = await _context.ServicesOnDashBoards.ToListAsync();
 
             var revenues = new List<Revenue>
             {
                 new Revenue
                 {
                     CustomerId = customer1.Id,
-                    ServiceId = service1.Id, // Points to ServicesOnDashBoard
+                    ServiceId = dashboardServices.First(s => s.CustomerId == customer1.Id).Id,
                     Amount = 5000.00m,
                     PaymentDate = DateTime.UtcNow.AddDays(-20),
                     PaymentMethod = "Bank Transfer",
-                    Notes = "Initial payment for website development",
+                    Notes = "Initial payment",
                     IsDeleted = false
                 },
                 new Revenue
                 {
                     CustomerId = customer2.Id,
-                    ServiceId = service2.Id, // Points to ServicesOnDashBoard
+                    ServiceId = dashboardServices.First(s => s.CustomerId == customer2.Id).Id,
                     Amount = 8000.00m,
                     PaymentDate = DateTime.UtcNow.AddDays(-15),
                     PaymentMethod = "Credit Card",
-                    Notes = "E-commerce platform payment",
-                    IsDeleted = false
-                },
-                new Revenue
-                {
-                    CustomerId = customer1.Id,
-                    ServiceId = service1.Id, // Points to ServicesOnDashBoard
-                    Amount = 2000.00m,
-                    PaymentDate = DateTime.UtcNow.AddDays(-8),
-                    PaymentMethod = "PayPal",
-                    Notes = "Additional service payment",
+                    Notes = "Platform payment",
                     IsDeleted = false
                 }
             };
@@ -372,38 +313,12 @@ namespace Tevolai.APIs.Helpers
 
         private async Task SeedContactMessagesAsync()
         {
-            if (await _context.ContactMessages.AnyAsync())
-                return;
+            if (await _context.ContactMessages.AnyAsync()) return;
 
             var messages = new List<ContactMessage>
             {
-                new ContactMessage
-                {
-                    FullName = "Sarah Johnson",
-                    Email = "sarah.johnson@example.com",
-                    Subject = "Website Development Inquiry",
-                    Message = "I'm interested in your website development services. Please contact me.",
-                    CreatedAt = DateTime.UtcNow.AddDays(-7),
-                    IsRead = false
-                },
-                new ContactMessage
-                {
-                    FullName = "Michael Brown",
-                    Email = "michael.brown@example.com",
-                    Subject = "Mobile App Development",
-                    Message = "Looking for mobile app development. What are your rates?",
-                    CreatedAt = DateTime.UtcNow.AddDays(-5),
-                    IsRead = true
-                },
-                new ContactMessage
-                {
-                    FullName = "Emily Davis",
-                    Email = "emily.davis@example.com",
-                    Subject = "SEO Services",
-                    Message = "Need help with SEO for my website. Can you provide a quote?",
-                    CreatedAt = DateTime.UtcNow.AddDays(-2),
-                    IsRead = false
-                }
+                new ContactMessage { FullName = "Sarah Johnson", Email = "sarah.johnson@example.com", Subject = "Website Inquiry", Message = "I'm interested in your website development services.", CreatedAt = DateTime.UtcNow.AddDays(-7), IsRead = false },
+                new ContactMessage { FullName = "Michael Brown", Email = "michael.brown@example.com", Subject = "Mobile App Dev", Message = "Looking for mobile app development.", CreatedAt = DateTime.UtcNow.AddDays(-5), IsRead = true }
             };
 
             await _context.ContactMessages.AddRangeAsync(messages);

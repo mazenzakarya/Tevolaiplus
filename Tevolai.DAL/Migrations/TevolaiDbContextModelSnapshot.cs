@@ -365,6 +365,7 @@ namespace Tevolai.DAL.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Category")
@@ -397,6 +398,7 @@ namespace Tevolai.DAL.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("CustomerId")
@@ -439,6 +441,9 @@ namespace Tevolai.DAL.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("ApplicationUserId")
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<int>("CMS")
                         .HasColumnType("int");
 
@@ -461,6 +466,9 @@ namespace Tevolai.DAL.Migrations
                     b.Property<string>("Notes")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("PaidStatus")
+                        .HasColumnType("int");
+
                     b.Property<string>("ServiceName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -473,6 +481,8 @@ namespace Tevolai.DAL.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ApplicationUserId");
 
                     b.HasIndex("CustomerId");
 
@@ -506,7 +516,11 @@ namespace Tevolai.DAL.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
+                    b.Property<int>("Language")
+                        .HasColumnType("int");
+
                     b.Property<decimal>("Price")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Title")
@@ -583,13 +597,13 @@ namespace Tevolai.DAL.Migrations
                     b.HasOne("Tevolai.DAL.Entities.Customer", "Customer")
                         .WithMany("Revenues")
                         .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("Tevolai.DAL.Entities.ServicesOnDashBoard", "Service")
                         .WithMany()
                         .HasForeignKey("ServiceId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("Tevolai.DAL.Entities.ServicesOnMain", null)
@@ -603,13 +617,24 @@ namespace Tevolai.DAL.Migrations
 
             modelBuilder.Entity("Tevolai.DAL.Entities.ServicesOnDashBoard", b =>
                 {
+                    b.HasOne("Tevolai.DAL.Entities.ApplicationUser", "ApplicationUsers")
+                        .WithMany("ServicesOnDashBoards")
+                        .HasForeignKey("ApplicationUserId");
+
                     b.HasOne("Tevolai.DAL.Entities.Customer", "Customer")
                         .WithMany("Services")
                         .HasForeignKey("CustomerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.Navigation("ApplicationUsers");
+
                     b.Navigation("Customer");
+                });
+
+            modelBuilder.Entity("Tevolai.DAL.Entities.ApplicationUser", b =>
+                {
+                    b.Navigation("ServicesOnDashBoards");
                 });
 
             modelBuilder.Entity("Tevolai.DAL.Entities.Customer", b =>

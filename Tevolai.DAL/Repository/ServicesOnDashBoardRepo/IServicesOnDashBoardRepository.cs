@@ -27,5 +27,7 @@ namespace Tevolai.DAL.Repository.ServicesOnDashBoardRepo
         Task<List<ServicesOnDashBoard>> SortServicesByCreatedAtAsync(bool ascending = true);
 
         Task UpdateServiceAsync(ServicesOnDashBoard service);
+
+        IQueryable<ServicesOnDashBoard> FilterServicesByCustomerAsync(string userId);
     }
 }

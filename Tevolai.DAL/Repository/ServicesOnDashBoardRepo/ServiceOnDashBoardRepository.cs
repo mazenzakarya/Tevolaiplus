@@ -126,5 +126,13 @@ namespace Tevolai.DAL.Repository.ServicesOnDashBoardRepo
                 .Where(s => s.CMS == cms)
                 .ToListAsync();
         }
+
+        //filter by user
+        public IQueryable<ServicesOnDashBoard> FilterServicesByCustomerAsync(string userId)
+        {
+            return db.ServicesOnDashBoards
+                .Include(s => s.ApplicationUsers)
+                .Where(s => s.ApplicationUserId == userId);
+        }
     }
 }

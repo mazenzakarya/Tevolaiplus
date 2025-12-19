@@ -18,5 +18,7 @@ namespace Tevolai.BL.DTOs.Auth
 
         [Required(ErrorMessage = "Full Name is required")]
         public string FullName { get; set; } = string.Empty;
+
+        public string PhoneNumber { get; set; } = string.Empty;
     }
 }
