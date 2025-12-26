@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using Tevolai.BL.Managers.EmailCredentials;
 
 namespace Tevolai.APIs.Controllers
@@ -63,7 +64,10 @@ namespace Tevolai.APIs.Controllers
         {
             try
             {
-                var credential = await _service.GetCredentialAsync(id, includeDecryptedPassword: false, by: "API");
+                var username = User.FindFirstValue(ClaimTypes.Name)
+               ?? User.Identity?.Name
+               ?? "Unknown";
+                var credential = await _service.GetCredentialAsync(id, includeDecryptedPassword: false, by: username);
                 if (credential == null)
                     return NotFound(new { error = "Credential not found" });
 
@@ -81,7 +85,10 @@ namespace Tevolai.APIs.Controllers
         {
             try
             {
-                var credential = await _service.GetCredentialAsync(id, includeDecryptedPassword: true, by: "API");
+                var username = User.FindFirstValue(ClaimTypes.Name)
+               ?? User.Identity?.Name
+               ?? "Unknown";
+                var credential = await _service.GetCredentialAsync(id, includeDecryptedPassword: true, by: username);
                 if (credential == null)
                     return NotFound(new { error = "Credential not found" });
 
@@ -126,6 +133,9 @@ namespace Tevolai.APIs.Controllers
 
             try
             {
+                var username = User.FindFirstValue(ClaimTypes.Name)
+               ?? User.Identity?.Name
+               ?? "Unknown";
                 await _service.UpdateCredentialAsync(
                     request.Id,
                     request.UserName,
@@ -133,7 +143,7 @@ namespace Tevolai.APIs.Controllers
                     request.CustomerId,
                     request.HostingPlatform,
                     request.Notes,
-                    "API"
+                    username
                 );
 
                 return Ok(new { message = "Credential updated successfully" });
@@ -154,7 +164,10 @@ namespace Tevolai.APIs.Controllers
         {
             try
             {
-                await _service.SoftDeleteCredentialAsync(id, "API");
+                var username = User.FindFirstValue(ClaimTypes.Name)
+               ?? User.Identity?.Name
+               ?? "Unknown";
+                await _service.SoftDeleteCredentialAsync(id, username);
                 return Ok(new { message = "Credential soft deleted successfully" });
             }
             catch (KeyNotFoundException ex)

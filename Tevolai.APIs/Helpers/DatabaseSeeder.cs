@@ -57,9 +57,6 @@ namespace Tevolai.APIs.Helpers
             // 7?? Seed Expenses
             await SeedExpensesAsync();
 
-            // 8?? Seed Revenues
-            await SeedRevenuesAsync(customer1, customer2);
-
             // 9?? Seed Contact Messages
             await SeedContactMessagesAsync();
         }
@@ -274,40 +271,6 @@ namespace Tevolai.APIs.Helpers
             };
 
             await _context.Expenses.AddRangeAsync(expenses);
-            await _context.SaveChangesAsync();
-        }
-
-        private async Task SeedRevenuesAsync(Customer customer1, Customer customer2)
-        {
-            if (await _context.Revenues.AnyAsync()) return;
-
-            var dashboardServices = await _context.ServicesOnDashBoards.ToListAsync();
-
-            var revenues = new List<Revenue>
-            {
-                new Revenue
-                {
-                    CustomerId = customer1.Id,
-                    ServiceId = dashboardServices.First(s => s.CustomerId == customer1.Id).Id,
-                    Amount = 5000.00m,
-                    PaymentDate = DateTime.UtcNow.AddDays(-20),
-                    PaymentMethod = "Bank Transfer",
-                    Notes = "Initial payment",
-                    IsDeleted = false
-                },
-                new Revenue
-                {
-                    CustomerId = customer2.Id,
-                    ServiceId = dashboardServices.First(s => s.CustomerId == customer2.Id).Id,
-                    Amount = 8000.00m,
-                    PaymentDate = DateTime.UtcNow.AddDays(-15),
-                    PaymentMethod = "Credit Card",
-                    Notes = "Platform payment",
-                    IsDeleted = false
-                }
-            };
-
-            await _context.Revenues.AddRangeAsync(revenues);
             await _context.SaveChangesAsync();
         }
 

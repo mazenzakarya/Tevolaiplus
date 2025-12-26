@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Microsoft.AspNetCore.Http;
 using Tevolai.DAL.Entities;
 
 namespace Tevolai.BL.DTOs.ServicesOnMainDto
@@ -10,6 +6,7 @@ namespace Tevolai.BL.DTOs.ServicesOnMainDto
     public class ServicesOnMainDto
     {
         public int Id { get; set; }
+        public IFormFile? ImageFile { get; set; }
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public decimal Price { get; set; }
