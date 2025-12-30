@@ -23,9 +23,10 @@ namespace Tevolai.APIs
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services
+            // Controllers
             builder.Services.AddControllers();
 
+            // CORS
             builder.Services.AddCors(options =>
             {
                 options.AddDefaultPolicy(policy =>
@@ -42,6 +43,7 @@ namespace Tevolai.APIs
                 });
             });
 
+            // DbContext
             builder.Services.AddDbContext<TevolaiDbContext>(options =>
                 options.UseMySql(
                     builder.Configuration.GetConnectionString("DefaultConnection"),
@@ -57,13 +59,14 @@ namespace Tevolai.APIs
                     }
                 ));
 
+            // Identity
             builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<TevolaiDbContext>()
                 .AddDefaultTokenProviders();
 
+            // Custom Services
             builder.Services.AddScoped<AuthManager>();
             builder.Services.AddScoped<DatabaseSeeder>();
-
             builder.Services.AddDALServices();
             builder.Services.AddBLServices();
 
@@ -136,18 +139,19 @@ namespace Tevolai.APIs
 
             var app = builder.Build();
 
-            // Seed database in development
+            // Seed database (Development only)
             if (app.Environment.IsDevelopment())
             {
-                using (var scope = app.Services.CreateScope())
-                {
-                    var seeder = scope.ServiceProvider.GetRequiredService<DatabaseSeeder>();
-                    await seeder.SeedAsync();
-                }
+                using var scope = app.Services.CreateScope();
+                var seeder = scope.ServiceProvider.GetRequiredService<DatabaseSeeder>();
+                await seeder.SeedAsync();
             }
 
-            // Configure middleware
-            if (app.Environment.IsDevelopment())
+            // Create uploads directory
+            var uploadsPath = Path.Combine(app.Environment.ContentRootPath, "uploads");
+            Directory.CreateDirectory(uploadsPath);
+
+            app.UseStaticFiles(new StaticFileOptions
             {
                 app.UseSwagger();
                 app.UseSwaggerUI(c =>
