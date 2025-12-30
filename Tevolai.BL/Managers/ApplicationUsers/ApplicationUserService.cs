@@ -22,7 +22,7 @@ namespace Tevolai.BL.Managers.ApplicationUsers
 
         public async Task<int> GetUsersCountAsync()
         {
-            return _userManager.Users.Count();
+            return await _userManager.Users.CountAsync();
         }
 
         //get all users with roles excluding deleted users

@@ -27,7 +27,7 @@ namespace Tevolai.APIs.Helpers
 
         public async Task SeedAsync()
         {
-            await _context.Database.EnsureCreatedAsync();
+            await _context.Database.MigrateAsync();
 
             // 1?? Seed Roles
             await SeedRolesAsync();
@@ -37,8 +37,8 @@ namespace Tevolai.APIs.Helpers
 
             // Users references
             var adminUser = users.First(u => u.UserName == "admin@tevolai.com");
-            var customerUser1 = users.First(u => u.UserName == "johndoe1");
-            var customerUser2 = users.First(u => u.UserName == "johndoe2");
+            //var customerUser1 = users.First(u => u.UserName == "johndoe1");
+            //var customerUser2 = users.First(u => u.UserName == "johndoe2");
 
             // 3?? Seed Customers
             var customers = await SeedCustomersAsync();
@@ -49,16 +49,13 @@ namespace Tevolai.APIs.Helpers
             await SeedServicesOnMainAsync();
 
             // 5?? Seed Services on Dashboard (linked with Users)
-            await SeedServicesOnDashboardAsync(customer1, customer2, adminUser, customerUser1, customerUser2);
+            //await SeedServicesOnDashboardAsync(customer1, customer2, adminUser, customerUser1, customerUser2);
 
             // 6?? Seed Email Credentials
             await SeedEmailCredentialsAsync(customer1, customer2);
 
             // 7?? Seed Expenses
             await SeedExpensesAsync();
-
-            // 8?? Seed Revenues
-            await SeedRevenuesAsync(customer1, customer2);
 
             // 9?? Seed Contact Messages
             await SeedContactMessagesAsync();
@@ -76,41 +73,61 @@ namespace Tevolai.APIs.Helpers
 
         private async Task<List<ApplicationUser>> SeedUsersAsync()
         {
-            if (await _userManager.Users.AnyAsync())
-                return await _userManager.Users.ToListAsync();
-
-            var adminUser = new ApplicationUser
+            var adminUser = await _userManager.FindByEmailAsync("admin@tevolai.com");
+            if (adminUser == null)
             {
-                UserName = "admin@tevolai.com",
-                Email = "admin@tevolai.com",
-                FullName = "Admin User",
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            };
-            var customerUser1 = new ApplicationUser
-            {
-                UserName = "johndoe1",
-                Email = "johndoe1@example.com",
-                FullName = "John Doe",
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            };
-            var customerUser2 = new ApplicationUser
-            {
-                UserName = "johndoe2",
-                Email = "johndoe2@example.com",
-                FullName = "John Doe2",
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            };
+                adminUser = new ApplicationUser
+                {
+                    UserName = "admin@tevolai.com",
+                    Email = "admin@tevolai.com",
+                    FullName = "Admin User",
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                };
+                await _userManager.CreateAsync(adminUser, "Admin@123");
+            }
 
-            await _userManager.CreateAsync(adminUser, "Admin@123");
-            await _userManager.CreateAsync(customerUser1, "Password@123");
-            await _userManager.CreateAsync(customerUser2, "Password@123");
+            // Ensure Admin role is assigned
+            if (!await _userManager.IsInRoleAsync(adminUser, "Admin"))
+            {
+                await _userManager.AddToRoleAsync(adminUser, "Admin");
+            }
 
-            await _userManager.AddToRoleAsync(adminUser, "Admin");
-            await _userManager.AddToRoleAsync(customerUser1, "Customer");
-            await _userManager.AddToRoleAsync(customerUser2, "Customer");
+            var customerUser1 = await _userManager.FindByEmailAsync("johndoe1@example.com");
+            if (customerUser1 == null)
+            {
+                customerUser1 = new ApplicationUser
+                {
+                    UserName = "johndoe1",
+                    Email = "johndoe1@example.com",
+                    FullName = "John Doe",
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                };
+                await _userManager.CreateAsync(customerUser1, "Password@123");
+            }
+            if (!await _userManager.IsInRoleAsync(customerUser1, "Customer"))
+            {
+                await _userManager.AddToRoleAsync(customerUser1, "Customer");
+            }
+
+            var customerUser2 = await _userManager.FindByEmailAsync("johndoe2@example.com");
+            if (customerUser2 == null)
+            {
+                customerUser2 = new ApplicationUser
+                {
+                    UserName = "johndoe2",
+                    Email = "johndoe2@example.com",
+                    FullName = "John Doe2",
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                };
+                await _userManager.CreateAsync(customerUser2, "Password@123");
+            }
+            if (!await _userManager.IsInRoleAsync(customerUser2, "Customer"))
+            {
+                await _userManager.AddToRoleAsync(customerUser2, "Customer");
+            }
 
             return new List<ApplicationUser> { adminUser, customerUser1, customerUser2 };
         }
@@ -274,40 +291,6 @@ namespace Tevolai.APIs.Helpers
             };
 
             await _context.Expenses.AddRangeAsync(expenses);
-            await _context.SaveChangesAsync();
-        }
-
-        private async Task SeedRevenuesAsync(Customer customer1, Customer customer2)
-        {
-            if (await _context.Revenues.AnyAsync()) return;
-
-            var dashboardServices = await _context.ServicesOnDashBoards.ToListAsync();
-
-            var revenues = new List<Revenue>
-            {
-                new Revenue
-                {
-                    CustomerId = customer1.Id,
-                    ServiceId = dashboardServices.First(s => s.CustomerId == customer1.Id).Id,
-                    Amount = 5000.00m,
-                    PaymentDate = DateTime.UtcNow.AddDays(-20),
-                    PaymentMethod = "Bank Transfer",
-                    Notes = "Initial payment",
-                    IsDeleted = false
-                },
-                new Revenue
-                {
-                    CustomerId = customer2.Id,
-                    ServiceId = dashboardServices.First(s => s.CustomerId == customer2.Id).Id,
-                    Amount = 8000.00m,
-                    PaymentDate = DateTime.UtcNow.AddDays(-15),
-                    PaymentMethod = "Credit Card",
-                    Notes = "Platform payment",
-                    IsDeleted = false
-                }
-            };
-
-            await _context.Revenues.AddRangeAsync(revenues);
             await _context.SaveChangesAsync();
         }
 

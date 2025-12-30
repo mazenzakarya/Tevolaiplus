@@ -36,7 +36,7 @@ namespace Tevolai.APIs.Controllers
             try
             {
                 var result = await _authManager.Login(loginDto);
-                return Ok(new { token = result });
+                return Ok(new { token = result.Token, expiresIn = result.ExpiresIn, userName = result.UserName, email = result.Email, id = result.Id });
             }
             catch (Exception ex)
             {

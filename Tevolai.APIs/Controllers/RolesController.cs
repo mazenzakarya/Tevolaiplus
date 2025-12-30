@@ -7,7 +7,6 @@ namespace Tevolai.APIs.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Admin")]
     public class RolesController : ControllerBase
     {
         private readonly RoleManager<IdentityRole> _roleManager;
@@ -19,9 +18,35 @@ namespace Tevolai.APIs.Controllers
             _userManager = userManager;
         }
 
+        // Quick fix endpoint - assign Admin role to admin user (no auth required for initial setup)
+        [HttpPost("fix-admin-role")]
+        public async Task<IActionResult> FixAdminRole()
+        {
+            var adminUser = await _userManager.FindByEmailAsync("admin@tevolai.com");
+            if (adminUser == null)
+                return NotFound(new { message = "Admin user not found" });
+
+            if (!await _roleManager.RoleExistsAsync("Admin"))
+            {
+                await _roleManager.CreateAsync(new IdentityRole("Admin"));
+            }
+
+            if (await _userManager.IsInRoleAsync(adminUser, "Admin"))
+            {
+                return Ok(new { message = "Admin role already assigned", userId = adminUser.Id });
+            }
+
+            var result = await _userManager.AddToRoleAsync(adminUser, "Admin");
+            if (!result.Succeeded)
+                return BadRequest(result.Errors);
+
+            return Ok(new { message = "Admin role assigned successfully", userId = adminUser.Id });
+        }
+
         public record CreateRoleRequest(string RoleName);
 
         [HttpPost("create")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateRole([FromBody] CreateRoleRequest request)
         {
             if (request == null || string.IsNullOrWhiteSpace(request.RoleName))
@@ -42,6 +67,7 @@ namespace Tevolai.APIs.Controllers
         public record AssignRoleRequest(string RoleName, string? UserId, string? Email);
 
         [HttpPost("assign")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AssignRole([FromBody] AssignRoleRequest request)
         {
             if (request == null || string.IsNullOrWhiteSpace(request.RoleName))
@@ -76,6 +102,7 @@ namespace Tevolai.APIs.Controllers
 
         //delete role from user
         [HttpPost("remove")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> RemoveRole([FromBody] AssignRoleRequest request)
         {
             if (request == null || string.IsNullOrWhiteSpace(request.RoleName))

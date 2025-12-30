@@ -12,11 +12,13 @@ namespace Tevolai.BL.Managers.Auth
     public class AuthManager : IAuthManager
     {
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IConfiguration _configuration;
 
-        public AuthManager(UserManager<ApplicationUser> userManager, IConfiguration configuration)
+        public AuthManager(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IConfiguration configuration)
         {
             _userManager = userManager;
+            _roleManager = roleManager;
             _configuration = configuration;
         }
 
@@ -27,13 +29,22 @@ namespace Tevolai.BL.Managers.Auth
                 UserName = registerDto.UserName,
                 Email = registerDto.Email,
                 FullName = registerDto.FullName,
-                PhoneNumber = registerDto.PhoneNumber
+                PhoneNumber = registerDto.PhoneNumber,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
             };
 
             var result = await _userManager.CreateAsync(user, registerDto.Password);
 
             if (!result.Succeeded)
                 throw new Exception(string.Join(", ", result.Errors.Select(e => e.Description)));
+
+            // Assign default "Customer" role to new registrations
+            if (await _roleManager.RoleExistsAsync("Customer"))
+            {
+                await _userManager.AddToRoleAsync(user, "Customer");
+            }
+
             return registerDto;
         }
 
@@ -46,6 +57,13 @@ namespace Tevolai.BL.Managers.Auth
             var isValid = await _userManager.CheckPasswordAsync(user, loginDto.Password);
             if (!isValid)
                 throw new Exception("Invalid email or password");
+
+            // Verify roles are loaded
+            var roles = await _userManager.GetRolesAsync(user);
+            if (roles == null || !roles.Any())
+            {
+                throw new Exception($"User {user.Email} has no roles assigned. Please contact administrator.");
+            }
 
             var token = await GenerateTokenAsync(user);
 
@@ -69,13 +87,16 @@ namespace Tevolai.BL.Managers.Auth
                 };
 
             var roles = await _userManager.GetRolesAsync(user);
-            foreach (var role in roles)
+            if (roles != null && roles.Any())
             {
-                claims.Add(new Claim(ClaimTypes.Role, role));
+                foreach (var role in roles)
+                {
+                    claims.Add(new Claim(ClaimTypes.Role, role));
+                }
             }
 
             var key = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(_configuration["Jwt:Key"])
+                Encoding.UTF8.GetBytes(_configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key not configured"))
             );
 
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
