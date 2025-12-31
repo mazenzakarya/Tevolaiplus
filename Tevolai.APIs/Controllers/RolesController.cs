@@ -18,31 +18,6 @@ namespace Tevolai.APIs.Controllers
             _userManager = userManager;
         }
 
-        // Quick fix endpoint - assign Admin role to admin user (no auth required for initial setup)
-        [HttpPost("fix-admin-role")]
-        public async Task<IActionResult> FixAdminRole()
-        {
-            var adminUser = await _userManager.FindByEmailAsync("admin@tevolai.com");
-            if (adminUser == null)
-                return NotFound(new { message = "Admin user not found" });
-
-            if (!await _roleManager.RoleExistsAsync("Admin"))
-            {
-                await _roleManager.CreateAsync(new IdentityRole("Admin"));
-            }
-
-            if (await _userManager.IsInRoleAsync(adminUser, "Admin"))
-            {
-                return Ok(new { message = "Admin role already assigned", userId = adminUser.Id });
-            }
-
-            var result = await _userManager.AddToRoleAsync(adminUser, "Admin");
-            if (!result.Succeeded)
-                return BadRequest(result.Errors);
-
-            return Ok(new { message = "Admin role assigned successfully", userId = adminUser.Id });
-        }
-
         public record CreateRoleRequest(string RoleName);
 
         [HttpPost("create")]

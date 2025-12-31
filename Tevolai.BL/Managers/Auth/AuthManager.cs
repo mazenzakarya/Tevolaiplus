@@ -24,6 +24,18 @@ namespace Tevolai.BL.Managers.Auth
 
         public async Task<RegisterDto> Register(RegisterDto registerDto)
         {
+            var existingByEmail = await _userManager.FindByEmailAsync(registerDto.Email);
+            if (existingByEmail != null)
+            {
+                throw new Exception("Email is already registered");
+            }
+
+            var existingByUserName = await _userManager.FindByNameAsync(registerDto.UserName);
+            if (existingByUserName != null)
+            {
+                throw new Exception("Username is already taken");
+            }
+
             var user = new ApplicationUser
             {
                 UserName = registerDto.UserName,
@@ -40,10 +52,8 @@ namespace Tevolai.BL.Managers.Auth
                 throw new Exception(string.Join(", ", result.Errors.Select(e => e.Description)));
 
             // Assign default "Customer" role to new registrations
-            if (await _roleManager.RoleExistsAsync("Customer"))
-            {
-                await _userManager.AddToRoleAsync(user, "Customer");
-            }
+            await EnsureRoleExistsAsync("Customer");
+            await _userManager.AddToRoleAsync(user, "Customer");
 
             return registerDto;
         }
@@ -62,7 +72,10 @@ namespace Tevolai.BL.Managers.Auth
             var roles = await _userManager.GetRolesAsync(user);
             if (roles == null || !roles.Any())
             {
-                throw new Exception($"User {user.Email} has no roles assigned. Please contact administrator.");
+                const string defaultRole = "Customer";
+                await EnsureRoleExistsAsync(defaultRole);
+                await _userManager.AddToRoleAsync(user, defaultRole);
+                roles = await _userManager.GetRolesAsync(user);
             }
 
             var token = await GenerateTokenAsync(user);
@@ -108,6 +121,16 @@ namespace Tevolai.BL.Managers.Auth
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        private async Task EnsureRoleExistsAsync(string roleName)
+        {
+            if (await _roleManager.RoleExistsAsync(roleName))
+            {
+                return;
+            }
+
+            await _roleManager.CreateAsync(new IdentityRole(roleName));
         }
     }
 }

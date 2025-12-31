@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Tevolai.BL.DTOs.ApplicationUserDto;
+using Tevolai.BL.DTOs.Auth;
 using Tevolai.BL.Managers.ApplicationUsers;
 
 namespace Tevolai.APIs.Controllers
@@ -86,12 +87,11 @@ namespace Tevolai.APIs.Controllers
 
         // PUT: api/ApplicationUser/ResetPassword/{id}
         [HttpPut("ResetPassword/{id}")]
-        public async Task<IActionResult> ResetPassword(string id, [FromBody] dynamic model)
+        public async Task<IActionResult> ResetPassword(string id, [FromBody] ResetPasswordDto model)
         {
-            string newPassword = model.newPassword;
-            var result = await _service.ResetPasswordAsync(id, newPassword);
+            var result = await _service.ResetPasswordAsync(id, model.NewPassword);
             if (!result.Succeeded)
-                return BadRequest(result.Errors);
+                return BadRequest(new { Errors = result.Errors.Select(e => e.Description) });
 
             return Ok(new { Message = "Password reset successfully" });
         }

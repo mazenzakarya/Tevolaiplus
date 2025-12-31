@@ -27,21 +27,21 @@ namespace Tevolai.APIs
             builder.Services.AddControllers();
 
             // CORS
-            builder.Services.AddCors(options =>
-            {
-                options.AddDefaultPolicy(policy =>
-                {
-                    policy.WithOrigins(
-                            "http://localhost:4200",
-                            "http://localhost:3000",
-                            "http://frontend:80",
-                            "http://frontend:4200"
-                        )
-                        .AllowAnyMethod()
-                        .AllowAnyHeader()
-                        .AllowCredentials();
-                });
-            });
+            //builder.Services.AddCors(options =>
+            //{
+            //    options.AddDefaultPolicy(policy =>
+            //    {
+            //        policy.WithOrigins(
+            //                "http://localhost:4200",
+            //                "http://localhost:3000",
+            //                "http://frontend:80",
+            //                "http://frontend:4200"
+            //            )
+            //            .AllowAnyMethod()
+            //            .AllowAnyHeader()
+            //            .AllowCredentials();
+            //    });
+            //});
 
             // DbContext
             builder.Services.AddDbContext<TevolaiDbContext>(options =>
@@ -59,8 +59,23 @@ namespace Tevolai.APIs
                     }
                 ));
 
+            //cors for test
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowLocalhost",
+                    policy => policy
+                        .WithOrigins("http://localhost:4200")
+                        .AllowAnyHeader()
+                        .AllowAnyMethod()
+                        .AllowCredentials()
+                );
+            });
+
             // Identity
-            builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+            builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+                {
+                    options.User.RequireUniqueEmail = true;
+                })
                 .AddEntityFrameworkStores<TevolaiDbContext>()
                 .AddDefaultTokenProviders();
 
@@ -71,7 +86,9 @@ namespace Tevolai.APIs
             builder.Services.AddBLServices();
 
             // JWT Authentication
-            var jwtSecret = builder.Configuration["Jwt:Key"];
+            var jwtSecret = builder.Configuration["Jwt:Key"]
+                ?? throw new Exception("JWT Key is missing in configuration");
+
             builder.Services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -147,19 +164,18 @@ namespace Tevolai.APIs
                 await seeder.SeedAsync();
             }
 
-            // Create uploads directory
-            var uploadsPath = Path.Combine(app.Environment.ContentRootPath, "uploads");
-            Directory.CreateDirectory(uploadsPath);
+            app.UseStaticFiles();
 
-            app.UseStaticFiles(new StaticFileOptions
+            if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
                 app.UseSwaggerUI(c =>
                 {
                     c.SwaggerEndpoint("/swagger/v1/swagger.json", "Tevolai API v1");
-                    c.RoutePrefix = string.Empty; // Set Swagger UI at the app's root
+                    c.RoutePrefix = string.Empty;
                 });
             }
+
             // migration for docker
             using (var scope = app.Services.CreateScope())
             {
@@ -168,7 +184,7 @@ namespace Tevolai.APIs
             }
 
             app.UseHttpsRedirection();
-            app.UseCors();
+            //app.UseCors();
 
             // Serve static files from uploads directory
             var uploadsPath = Path.Combine(app.Environment.ContentRootPath, "uploads");
@@ -182,6 +198,7 @@ namespace Tevolai.APIs
                 RequestPath = "/uploads"
             });
 
+            app.UseCors("AllowLocalhost");
             app.UseAuthentication();
             app.UseAuthorization();
 

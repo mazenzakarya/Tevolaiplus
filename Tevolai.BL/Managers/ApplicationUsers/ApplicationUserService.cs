@@ -92,6 +92,18 @@ namespace Tevolai.BL.Managers.ApplicationUsers
         //create user with roles
         public async Task<IdentityResult> CreateAsync(AddUserDto dto)
         {
+            var existingEmail = await _userManager.FindByEmailAsync(dto.Email);
+            if (existingEmail != null && !existingEmail.IsDeleted)
+            {
+                return IdentityResult.Failed(new IdentityError { Description = "Email is already registered" });
+            }
+
+            var existingUserName = await _userManager.FindByNameAsync(dto.UserName);
+            if (existingUserName != null && !existingUserName.IsDeleted)
+            {
+                return IdentityResult.Failed(new IdentityError { Description = "Username is already taken" });
+            }
+
             var user = new ApplicationUser
             {
                 Email = dto.Email,
@@ -115,6 +127,18 @@ namespace Tevolai.BL.Managers.ApplicationUsers
             if (user == null)
                 return IdentityResult.Failed();
 
+            var otherWithEmail = await _userManager.FindByEmailAsync(email);
+            if (otherWithEmail != null && otherWithEmail.Id != userId && !otherWithEmail.IsDeleted)
+            {
+                return IdentityResult.Failed(new IdentityError { Description = "Email is already registered" });
+            }
+
+            var otherWithUserName = await _userManager.FindByNameAsync(userName);
+            if (otherWithUserName != null && otherWithUserName.Id != userId && !otherWithUserName.IsDeleted)
+            {
+                return IdentityResult.Failed(new IdentityError { Description = "Username is already taken" });
+            }
+
             var updatedUser = new
             {
                 user.Id,
@@ -130,23 +154,17 @@ namespace Tevolai.BL.Managers.ApplicationUsers
             return await _userManager.UpdateAsync(user);
         }
 
+        //reset password
         public async Task<IdentityResult> ResetPasswordAsync(string userId, string newPassword)
         {
-            // جلب المستخدم
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null)
-                return IdentityResult.Failed();
+                return IdentityResult.Failed(new IdentityError { Description = "User not found" });
 
-            // نعمل anonymous object لتخزين البيانات المطلوبة (اختياري)
-            var resetInfo = new
-            {
-                UserId = user.Id,
-                Password = newPassword
-            };
-
-            // استخدام الـ UserManager لعمل Reset Password
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-            return await _userManager.ResetPasswordAsync(user, token, resetInfo.Password);
+            var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
+
+            return result;
         }
 
         // soft delete user
