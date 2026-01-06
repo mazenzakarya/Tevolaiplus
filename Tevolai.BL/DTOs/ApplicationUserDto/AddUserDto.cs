@@ -13,6 +13,8 @@ namespace Tevolai.BL.DTOs.ApplicationUserDto
         public string UserName { get; set; } = string.Empty;
         public string FullName { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
+        public string UserEmail { get; set; } = string.Empty;
+        public string PhoneNumber { get; set; } = string.Empty;
         public bool IsActive { get; set; }
         public ICollection<string> Roles { get; set; } = new HashSet<string>();
     }

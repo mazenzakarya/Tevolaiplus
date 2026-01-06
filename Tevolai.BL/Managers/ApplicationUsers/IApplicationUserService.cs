@@ -19,6 +19,6 @@ namespace Tevolai.BL.Managers.ApplicationUsers
 
         Task<IdentityResult> SoftDeleteAsync(string userId);
 
-        Task<IdentityResult> UpdateAsync(string userId, string email, string userName, string fullName);
+        Task<IdentityResult> UpdateAsync(string userId, string email, string userName, string fullName, string phoneNumber);
     }
 }

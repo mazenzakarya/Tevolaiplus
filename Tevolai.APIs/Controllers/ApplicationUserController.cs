@@ -73,12 +73,13 @@ namespace Tevolai.APIs.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(string id, [FromBody] dynamic model)
         {
-            // نموذج anonymous: { email, userName, fullName }
+            // anonymous: { email, userName, fullName }
             string email = model.email;
             string userName = model.userName;
             string fullName = model.fullName;
+            string phoneNumber = model.phoneNumber;
 
-            var result = await _service.UpdateAsync(id, email, userName, fullName);
+            var result = await _service.UpdateAsync(id, email, userName, fullName, phoneNumber);
             if (!result.Succeeded)
                 return BadRequest(result.Errors);
 

@@ -44,6 +44,7 @@ namespace Tevolai.BL.Managers.ApplicationUsers
                     FullName = user.FullName,
                     Email = user.Email!,
                     UserName = user.UserName!,
+                    PhoneNumber = user.PhoneNumber!,
                     IsActive = !user.LockoutEnabled,
                     Roles = roles.ToList()
                 });
@@ -108,7 +109,8 @@ namespace Tevolai.BL.Managers.ApplicationUsers
             {
                 Email = dto.Email,
                 UserName = dto.UserName,
-                FullName = dto.FullName
+                FullName = dto.FullName,
+                PhoneNumber = dto.PhoneNumber,
             };
 
             var result = await _userManager.CreateAsync(user, dto.Password);
@@ -121,7 +123,7 @@ namespace Tevolai.BL.Managers.ApplicationUsers
         }
 
         //update user by id using anonymous type to avoid overposting
-        public async Task<IdentityResult> UpdateAsync(string userId, string email, string userName, string fullName)
+        public async Task<IdentityResult> UpdateAsync(string userId, string email, string userName, string fullName, string phoneNumber)
         {
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null)
@@ -144,12 +146,14 @@ namespace Tevolai.BL.Managers.ApplicationUsers
                 user.Id,
                 Email = email,
                 UserName = userName,
-                FullName = fullName
+                FullName = fullName,
+                PhoneNumber = user.PhoneNumber
             };
 
             user.Email = updatedUser.Email;
             user.UserName = updatedUser.UserName;
             user.FullName = updatedUser.FullName;
+            user.PhoneNumber = updatedUser.PhoneNumber;
 
             return await _userManager.UpdateAsync(user);
         }
