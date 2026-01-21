@@ -26,23 +26,6 @@ namespace Tevolai.APIs
             // Controllers
             builder.Services.AddControllers();
 
-            // CORS
-            //builder.Services.AddCors(options =>
-            //{
-            //    options.AddDefaultPolicy(policy =>
-            //    {
-            //        policy.WithOrigins(
-            //                "http://localhost:4200",
-            //                "http://localhost:3000",
-            //                "http://frontend:80",
-            //                "http://frontend:4200"
-            //            )
-            //            .AllowAnyMethod()
-            //            .AllowAnyHeader()
-            //            .AllowCredentials();
-            //    });
-            //});
-
             // DbContext
             builder.Services.AddDbContext<TevolaiDbContext>(options =>
                 options.UseMySql(

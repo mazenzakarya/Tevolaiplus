@@ -42,6 +42,7 @@ namespace Tevolai.BL.Managers.ServicesOnMains
                 Title = entity.Title,
                 Description = entity.Description,
                 Price = entity.Price,
+                Language = entity.Language,
                 ImageUrl = entity.ImageUrl,
                 Category = entity.Category,
                 IsActive = entity.IsActive,
@@ -59,6 +60,7 @@ namespace Tevolai.BL.Managers.ServicesOnMains
             entity.Title = service.Title;
             entity.Description = service.Description;
             entity.Price = service.Price;
+            entity.Language = service.Language;
             entity.ImageUrl = service.ImageUrl;
             entity.Category = service.Category;
             entity.IsActive = service.IsActive;
@@ -88,6 +90,7 @@ namespace Tevolai.BL.Managers.ServicesOnMains
                 ImageUrl = entity.ImageUrl,
                 Category = entity.Category,
                 IsActive = entity.IsActive,
+                Language = entity.Language,
                 CreatedAt = entity.CreatedAt,
                 IsDeleted = entity.IsDeleted
             }).ToList();
@@ -106,6 +109,7 @@ namespace Tevolai.BL.Managers.ServicesOnMains
                 ImageUrl = entity.ImageUrl,
                 Category = entity.Category,
                 IsActive = entity.IsActive,
+                Language = entity.Language,
                 CreatedAt = entity.CreatedAt,
                 IsDeleted = entity.IsDeleted
             }).ToList();
@@ -124,6 +128,7 @@ namespace Tevolai.BL.Managers.ServicesOnMains
                 ImageUrl = entity.ImageUrl,
                 Category = entity.Category,
                 IsActive = entity.IsActive,
+                Language = entity.Language,
                 CreatedAt = entity.CreatedAt,
                 IsDeleted = entity.IsDeleted
             }).ToList();
